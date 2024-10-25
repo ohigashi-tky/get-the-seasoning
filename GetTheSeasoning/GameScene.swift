@@ -14,6 +14,7 @@ class GameScene: SKScene {
     var gameTimer: Timer?
     var messageTimer: Timer?
     var elapsedTime: TimeInterval = 0
+    var currentMessageLabel: SKLabelNode?
     
     // 画面が呼び出された時
     override func didMove(to view: SKView) {
@@ -23,7 +24,7 @@ class GameScene: SKScene {
     func setupGame() {
         // タイマー表示
         timerLabel = SKLabelNode(text: "タイム: 0秒")
-        timerLabel.position = CGPoint(x: frame.midX, y: frame.maxY - 50)
+        timerLabel.position = CGPoint(x: frame.midX, y: frame.maxY - 130)
         addChild(timerLabel)
         
         // 最初に醤油を表示
@@ -37,39 +38,51 @@ class GameScene: SKScene {
         // 醤油を新しい位置に生成
 //        let randomX = CGFloat.random(in: 0...frame.width)
 //        let randomY = CGFloat.random(in: 0...frame.height)
-        bottle = SKSpriteNode(color: .brown, size: CGSize(width: 50, height: 100))
-        bottle.position = CGPoint(x: 100, y: 200)
+        bottle = SKSpriteNode(color: .brown, size: CGSize(width: 60, height:170))
+        bottle.position = CGPoint(x: 00, y: 0)
         addChild(bottle)
     }
     
     func showMessage(_ message: String) {
-        let messageLabel = SKLabelNode(text: message)
-        messageLabel.position = CGPoint(x: frame.midX, y: frame.maxY - 100)
-        addChild(messageLabel)
+        // 前回のメッセージを削除
+        currentMessageLabel?.removeFromParent()
         
+        let messageLabel = SKLabelNode(text: message)
+        messageLabel.position = CGPoint(x: frame.midX, y: frame.maxY - 250)
+        addChild(messageLabel)
+        // 現在のメッセージ
+        currentMessageLabel = messageLabel
+
         // 一定時間後にメッセージを消す
         let wait = SKAction.wait(forDuration: 2.0)
         let remove = SKAction.removeFromParent()
-        messageLabel.run(SKAction.sequence([wait, remove]))
+        messageLabel.run(SKAction.sequence([wait, remove])) {
+            self.currentMessageLabel = nil
+        }
     }
     
     func startMessageTimer() {
-        messageTimer = Timer.scheduledTimer(withTimeInterval: 4.0, repeats: true) { [weak self] _ in
-            let randomDelay = Double.random(in: 5.0...7.0)
+        let interval = Double.random(in: 5.0...7.0);
+        messageTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
             self?.showMessage("醤油取って！")
-            // 次のメッセージ表示のために、再度タイマーを設定
-            DispatchQueue.main.asyncAfter(deadline: .now() + randomDelay) {
-                self?.startMessageTimer()
-            }
+            self?.startTimer()
         }
     }
     
     func startTimer() {
+        // 既存のゲームタイマーを無効化
+        gameTimer?.invalidate()
+        
         elapsedTime = 0
-        gameTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
-            self?.elapsedTime += 1
-            self?.timerLabel.text = "タイム: \(Int(self?.elapsedTime ?? 0))秒"
+        gameTimer = Timer.scheduledTimer(withTimeInterval: 0.01, repeats: true) { [weak self] _ in
+            self?.elapsedTime += 0.01
+            self?.timerLabel.text = String(format: "タイム: %.2f秒", self?.elapsedTime ?? 0)
         }
+    }
+    
+    func stopTimer() {
+        gameTimer?.invalidate() // タイマーを無効化
+        gameTimer = nil // タイマーをnilにする
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -81,6 +94,7 @@ class GameScene: SKScene {
             bottle.removeFromParent() // ボトルを取った（消す）
             gameTimer?.invalidate() // タイマーを停止
             showMessage("醤油を取った！")
+            stopTimer()
             
             // 新しい醤油を表示
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
