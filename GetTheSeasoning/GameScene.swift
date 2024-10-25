@@ -9,12 +9,16 @@ import SpriteKit
 
 class GameScene: SKScene {
     
-    var bottle: SKSpriteNode!
+    var arm: SKSpriteNode!
+    var soysauce: SKSpriteNode!
     var timerLabel: SKLabelNode!
     var gameTimer: Timer?
     var messageTimer: Timer?
     var elapsedTime: TimeInterval = 0
     var currentMessageLabel: SKLabelNode?
+    
+    // スワイプ開始位置
+    var swipeStartPosition: CGPoint?
     
     // 画面が呼び出された時
     override func didMove(to view: SKView) {
@@ -27,9 +31,14 @@ class GameScene: SKScene {
         timerLabel.position = CGPoint(x: frame.midX, y: frame.maxY - 130)
         addChild(timerLabel)
         
-        // 最初に醤油を表示
+        // 腕を表示
+        let armTexture = SKTexture(imageNamed: "arm")
+        arm = SKSpriteNode(texture: armTexture, size: CGSize(width: 150, height: 300))
+        arm.position = CGPoint(x: 0, y: -100)
+        addChild(arm)
+        
+        // 醤油を表示(初回)
         spawnSoysauce()
-
         // 指示
         startMessageTimer()
     }
@@ -38,9 +47,10 @@ class GameScene: SKScene {
         // 醤油を新しい位置に生成
 //        let randomX = CGFloat.random(in: 0...frame.width)
 //        let randomY = CGFloat.random(in: 0...frame.height)
-        bottle = SKSpriteNode(color: .brown, size: CGSize(width: 60, height:170))
-        bottle.position = CGPoint(x: 00, y: 0)
-        addChild(bottle)
+        let soysauceTexture = SKTexture(imageNamed: "soysauce")
+        soysauce = SKSpriteNode(texture: soysauceTexture, size: CGSize(width: 170, height: 200))
+        soysauce.position = CGPoint(x: 0, y: 0)
+        addChild(soysauce)
     }
     
     func showMessage(_ message: String) {
@@ -87,16 +97,48 @@ class GameScene: SKScene {
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard let touch = touches.first else { return }
+        swipeStartPosition = touch.location(in: self)
+
+//        let location = touch.location(in: self)
+//        // 醤油がタッチされたかをチェック
+//        if soysauce.contains(location) {
+//            soysauce.removeFromParent() // 醤油を取った（消す）
+//            gameTimer?.invalidate() // タイマーを停止
+//            showMessage("醤油を取った！")
+//            stopTimer()
+//            
+//            // 新しい醤油を表示
+//            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+//                self.spawnSoysauce()
+//            }
+//        }
+    }
+    
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+        guard let touch = touches.first, let startPosition = swipeStartPosition else { return }
+        let currentPosition = touch.location(in: self)
+        
+        // スワイプに合わせて腕を移動
+        let deltaX = currentPosition.x - startPosition.x
+        let deltaY = currentPosition.y - startPosition.y
+        let newPosition = CGPoint(x: arm.position.x + deltaX, y: arm.position.y + deltaY)
+        arm.position = newPosition
+        
+        // スワイプ開始位置を更新
+        swipeStartPosition = currentPosition
+    }
+    
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        // スワイプの終点で醤油に触れたかをチェック
+        guard let touch = touches.first else { return }
         let location = touch.location(in: self)
         
-        // ボトルがタッチされたかをチェック
-        if bottle.contains(location) {
-            bottle.removeFromParent() // ボトルを取った（消す）
-            gameTimer?.invalidate() // タイマーを停止
+        if soysauce.contains(location) {
+            soysauce.removeFromParent()
+            gameTimer?.invalidate()
             showMessage("醤油を取った！")
             stopTimer()
             
-            // 新しい醤油を表示
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
                 self.spawnSoysauce()
             }
