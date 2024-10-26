@@ -5,4 +5,4 @@
 Swift
 
 ## 画面
-![alt text](app_image.png)
+![alt text](app_image.jpeg)
