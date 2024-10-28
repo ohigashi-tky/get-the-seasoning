@@ -12,6 +12,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     var audioPlayer: AVAudioPlayer?
     
+    var desk: SKSpriteNode!
     var arm: SKSpriteNode!
     var soysauce: SKSpriteNode!
     var messageImage: SKSpriteNode!
@@ -39,6 +40,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     // 画面が呼び出された時
     override func didMove(to view: SKView) {
         playBackgroundMusic()
+        
+        self.scaleMode = .aspectFill
+
         physicsWorld.gravity = CGVector(dx: 0, dy: 0) // 重力無し
         physicsWorld.contactDelegate = self // 衝突判定を使用するために
         setupResetButton()
@@ -63,6 +67,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func setupGame() {
+        // 机
+        let deskTexture = SKTexture(imageNamed: "desk")
+        desk = SKSpriteNode(texture: deskTexture, size: CGSize(width: 550, height: 600))
+        desk.position = CGPoint(x: frame.midX, y: frame.midY - 50)
+        desk.zPosition = 0
+        addChild(desk)
+        
         // タイム計測
         timerLabel = SKLabelNode(text: "タイム: 0秒")
         timerLabel.position = CGPoint(x: frame.midX, y: frame.maxY - 170)
@@ -80,7 +91,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // 腕を表示
         let armTexture = SKTexture(imageNamed: "arm")
         arm = SKSpriteNode(texture: armTexture, size: CGSize(width: 150, height: 300))
-        arm.position = CGPoint(x: 0, y: -400)
+        arm.position = CGPoint(x: frame.midX, y: frame.midY - 400)
+        arm.zPosition = 2
         // 腕に物理ボディを追加
         arm.physicsBody = SKPhysicsBody(texture: armTexture, size: arm.size)
         arm.physicsBody?.isDynamic = true
@@ -98,12 +110,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     // リセットボタン
     func setupResetButton() {
         let background = SKSpriteNode(color: SKColor.gray, size: CGSize(width: 120, height: 50))
-        background.position = CGPoint(x: 200, y: frame.maxY - 75)
+        background.position = CGPoint(x: frame.midX + 200, y: frame.maxY - 75)
         addChild(background)
 
         resetButton = SKLabelNode(text: "リセット")
-        print(frame.minX)
-        resetButton.position = CGPoint(x: 200, y: frame.maxY - 85)
+        resetButton.position = CGPoint(x: frame.midX + 200, y: frame.maxY - 85)
         resetButton.fontSize = 30
         resetButton.fontColor = SKColor.white
         addChild(resetButton)
@@ -113,7 +124,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func spawnSoysauce() {
         let soysauceTexture = SKTexture(imageNamed: "soysauce")
         soysauce = SKSpriteNode(texture: soysauceTexture, size: CGSize(width: 170, height: 200))
-        soysauce.position = CGPoint(x: 0, y: 100)
+        soysauce.position = CGPoint(x: frame.midX, y: frame.midY + 100)
+        soysauce.zPosition = 1
         
         // 醤油に物理ボディを追加
         soysauce.physicsBody = SKPhysicsBody(texture: soysauceTexture, size: soysauce.size)
@@ -188,12 +200,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let bodyB = contact.bodyB
         // 腕と醤油が接触したとき
         let isContact = (bodyA.categoryBitMask == PhysicsCategory.arm && bodyB.categoryBitMask ==           PhysicsCategory.soySauce) || (bodyA.categoryBitMask == PhysicsCategory.soySauce && bodyB.categoryBitMask == PhysicsCategory.arm)
-        if (isContact) {
+        if isContact {
             if let soyNode = bodyB.categoryBitMask == PhysicsCategory.soySauce ? bodyB.node : bodyA.node {
                 // 醤油を手に固定
                 soyNode.removeFromParent()
                 arm.addChild(soyNode)
-                soyNode.position = CGPoint(x: 0, y: 100)
+                // TODO 醤油が離れた位置に固定されてしまう
+                soyNode.position = CGPoint(x: arm.position.x, y: arm.position.y + 100)
                 soyNode.physicsBody?.isDynamic = false
                 soyNode.name = "soysauce"
             }
@@ -220,7 +233,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         timerLabel.text = String(format: "タイム: %.2f秒", elapsedTime)
         stopTimer()
         bestTimeLabel.text = "最高タイム:"
-        arm.position = CGPoint(x: 0, y: -400)
+        arm.position = CGPoint(x: frame.midX, y: -400)
         resetArmPosition()
         // 醤油の初期化
         if let soyNode = arm.childNode(withName: "soysauce") {
@@ -298,7 +311,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func resetArmPosition() {
         // 腕を初期位置に戻す
-        arm.position = CGPoint(x: 0, y: -400)
+        arm.position = CGPoint(x: frame.midX, y: frame.midY - 400)
         arm.zRotation = 0
     }
     
