@@ -11,24 +11,28 @@ import AVFoundation
 class TitleScene: SKScene {
     
     var audioPlayer: AVAudioPlayer?
-    var startButton: SKLabelNode!
+    var startButton: SKShapeNode!
     
     override func didMove(to view: SKView) {
         playBackgroundMusic()
         
         self.scaleMode = .aspectFill
-
-        // スタートボタンの設定
-        let startButtonbg = SKSpriteNode(color: SKColor.gray, size: CGSize(width: 250, height: 90))
-        startButtonbg.position = CGPoint(x: frame.midX, y: frame.midY - 180)
-        startButtonbg.zPosition = 0
-        addChild(startButtonbg)
-        startButton = SKLabelNode(text: "スタート")
-        startButton.position = CGPoint(x: frame.midX, y: frame.midY - 200)
-        startButton.fontSize = 60
-        startButton.fontColor = SKColor.white
+        
+        // スタートボタン TODO:外部関数化
+        let buttonSize = CGSize(width: 250, height: 90)
+        startButton = SKShapeNode(rectOf: buttonSize, cornerRadius: 5)
+        startButton.fillColor = SKColor.white
+        startButton.strokeColor = SKColor.black
+        startButton.lineWidth = 2
         startButton.zPosition = 1
+        startButton.position = CGPoint(x: frame.midX, y: frame.midY - 180)
         addChild(startButton)
+        let startButtonLabel = SKLabelNode(text: "スタート")
+        startButtonLabel.position = CGPoint(x: frame.midX, y: frame.midY - 200)
+        startButtonLabel.fontSize = 60
+        startButtonLabel.fontColor = SKColor.black
+        startButtonLabel.zPosition = 1
+        addChild(startButtonLabel)
     }
     
     func playBackgroundMusic() {

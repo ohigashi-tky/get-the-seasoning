@@ -28,6 +28,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var elapsedTime: TimeInterval = 0
     
     var isIndicatingFlag: Bool = false
+    var isHoldingSoy: Bool = false // 醤油を掴んでいるかどうかを追跡
     
     // スワイプ開始位置
     var swipeStartPosition: CGPoint?
@@ -35,6 +36,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     struct PhysicsCategory {
         static let arm: UInt32 = 0x1 << 0 // 腕のカテゴリ
         static let soySauce: UInt32 = 0x1 << 1 // 醤油のカテゴリ
+        static let wall: UInt32 = 0x1 << 2 // 壁のカテゴリ
     }
     
     // 画面が呼び出された時
@@ -67,6 +69,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func setupGame() {
+        // 上部の透明な壁
+        createInvisibleWall()
         // 机
         let deskTexture = SKTexture(imageNamed: "desk")
         desk = SKSpriteNode(texture: deskTexture, size: CGSize(width: 550, height: 600))
@@ -97,8 +101,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         arm.physicsBody = SKPhysicsBody(texture: armTexture, size: arm.size)
         arm.physicsBody?.isDynamic = true
         arm.physicsBody?.categoryBitMask = PhysicsCategory.arm
-        arm.physicsBody?.contactTestBitMask = PhysicsCategory.soySauce
-        arm.physicsBody?.collisionBitMask = PhysicsCategory.soySauce
+        arm.physicsBody?.contactTestBitMask = PhysicsCategory.soySauce | PhysicsCategory.wall
+        arm.physicsBody?.collisionBitMask = PhysicsCategory.soySauce | PhysicsCategory.wall
+        arm.physicsBody?.restitution = 0.0 // 衝突時の反発
+        arm.physicsBody?.friction = 0.0 // 摩擦
         addChild(arm)
         
         // 醤油を表示(初回)
@@ -174,7 +180,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     // タイム計測
     func startTimer() {
-        print("タイム計測START!!")
         gameTimer?.invalidate()
 
         elapsedTime = 0
@@ -192,7 +197,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     // 接触を始めたときに呼び出される
     func didBegin(_ contact: SKPhysicsContact) {
         // 醤油を掴んでる間は処理を行わない
-        if let existSoysauce = arm.children.first(where: { $0.name == "soysauce" }) {
+        if isHoldingSoy {
             return
         }
 
@@ -202,13 +207,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let isContact = (bodyA.categoryBitMask == PhysicsCategory.arm && bodyB.categoryBitMask ==           PhysicsCategory.soySauce) || (bodyA.categoryBitMask == PhysicsCategory.soySauce && bodyB.categoryBitMask == PhysicsCategory.arm)
         if isContact {
             if let soyNode = bodyB.categoryBitMask == PhysicsCategory.soySauce ? bodyB.node : bodyA.node {
-                // 醤油を手に固定
-                soyNode.removeFromParent()
-                arm.addChild(soyNode)
-                // TODO 醤油が離れた位置に固定されてしまう
-                soyNode.position = CGPoint(x: arm.position.x, y: arm.position.y + 100)
-                soyNode.physicsBody?.isDynamic = false
-                soyNode.name = "soysauce"
+                // 手に醤油を固定する
+                let handPosition = CGPoint(x: arm.position.x, y: arm.position.y + (arm.size.height / 2))
+                let joint = SKPhysicsJointFixed.joint(withBodyA: arm.physicsBody!, bodyB: soyNode.physicsBody!, anchor: handPosition)
+                self.physicsWorld.add(joint)
+                
+                isHoldingSoy = true
             }
         }
     }
@@ -236,7 +240,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         arm.position = CGPoint(x: frame.midX, y: -400)
         resetArmPosition()
         // 醤油の初期化
-        if let soyNode = arm.childNode(withName: "soysauce") {
+        if let soyNode = self.childNode(withName: "soysauce") {
             isIndicatingFlag = false;
             soyNode.removeFromParent()
             self.spawnSoysauce()
@@ -244,42 +248,67 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
-        guard let touch = touches.first, let startPosition = swipeStartPosition else { return }
+        guard let touch = touches.first else { return }
         let currentPosition = touch.location(in: self)
-
-        // スワイプに合わせて腕を移動
-        if arm.contains(currentPosition) {
-            let diffX = currentPosition.x - startPosition.x
-            let diffY = currentPosition.y - startPosition.y
-            let newPosition = CGPoint(x: arm.position.x + diffX, y: arm.position.y + diffY)
-            arm.position = newPosition
-        }
         
+//        // 画面上部に腕を移動できないように
+//        let screenHeight = frame.height
+//        let upperLimitY = screenHeight - screenHeight / 3
+//        let newPosition = CGPoint(x: currentPosition.x, y: currentPosition.y)
+//        if newPosition.y > upperLimitY {
+//            arm.position.y = upperLimitY
+//        } else {
+//            arm.position.y = newPosition.y
+//        }
+//        print(upperLimitY, arm.position)
+        
+        // スワイプによる移動量を計算
+        let diffX = currentPosition.x - arm.position.x
+        let diffY = currentPosition.y - arm.position.y
+        
+        // 腕の位置を更新
+        let speedFactor: CGFloat = 1 // 移動の滑らかさ調整
+        arm.position = CGPoint(x: arm.position.x + diffX * speedFactor, y: arm.position.y + diffY * speedFactor)
+
         // 醤油を掴んだ状態で下部に到達したら取ったことにする
-        if let soyNode = arm.children.first(where: { $0.name == "soysauce" }) {
-            let soyNodeGlobalPosition = soyNode.convert(soyNode.position, to: self) // グローバル座標に変換
-            if soyNodeGlobalPosition.y < frame.minY + (frame.height / 3.3) {
+        if let soyNode = self.childNode(withName: "soysauce" ) {
+            let soyNodeGlobalPosition = soyNode.convert(soyNode.position, to: self)
+            if soyNodeGlobalPosition.y < frame.minY + (frame.height / 2.2) {
                 removeSoysauce()
             }
         }
-    
+        
         // スワイプ開始位置を更新
         swipeStartPosition = currentPosition
     }
     
+    func createInvisibleWall() {
+        let wallHeight: CGFloat = frame.height / 3
+        let wall = SKSpriteNode(color: .clear, size: CGSize(width: frame.width, height: wallHeight))
+        wall.position = CGPoint(x: frame.midX, y: frame.maxY - wallHeight / 3.2) // 壁の位置を設定
+        
+        // 壁に物理ボディを追加
+        wall.physicsBody = SKPhysicsBody(rectangleOf: wall.size)
+        wall.physicsBody?.isDynamic = false
+        wall.physicsBody?.categoryBitMask = PhysicsCategory.wall
+        wall.physicsBody?.contactTestBitMask = PhysicsCategory.arm
+        wall.physicsBody?.collisionBitMask = PhysicsCategory.arm
+        addChild(wall)
+    }
+    
     func removeSoysauce() {
-        if let soyNode = arm.childNode(withName: "soysauce") {
+        if let soyNode = self.childNode(withName: "soysauce") {
             soyNode.removeFromParent()
         }
 
         // メッセージ吹き出しを削除
         messageImage?.removeFromParent()
         if elapsedTime < 0.5 {
-            showMessage("早すぎぃ！")
+            showMessage("はやすぎぃ〜")
         } else if elapsedTime < 1 {
-            showMessage("早い！")
+            showMessage("はっやぁ〜")
         } else if elapsedTime > 3 {
-            showMessage("遅い！")
+            showMessage("おっそぉ〜")
         } else {
             showMessage("ありがとう！")
         }
@@ -298,6 +327,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         isIndicatingFlag = false;
         // 腕を初期位置に戻す
         resetArmPosition()
+        isHoldingSoy = false
         // タイマーを初期化
         elapsedTime = 0
         timerLabel.text = String(format: "タイム: %.2f秒", elapsedTime)
