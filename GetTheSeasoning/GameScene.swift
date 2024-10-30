@@ -11,7 +11,10 @@ import AVFoundation
 class GameScene: SKScene, SKPhysicsContactDelegate {
     
     var audioPlayer: AVAudioPlayer?
+    var effectPlayer: AVAudioPlayer?
     
+    var flooring: SKSpriteNode!
+    var monitor: SKSpriteNode!
     var desk: SKSpriteNode!
     var arm: SKSpriteNode!
     var soysauce: SKSpriteNode!
@@ -21,7 +24,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var bestTime: TimeInterval = Double.greatestFiniteMagnitude
     var bestTimeLabel: SKLabelNode!
     var currentMessageLabel: SKLabelNode?
-    var resetButton: SKLabelNode!
+    var returnButton: SKShapeNode!
+    var resetButton: SKShapeNode!
     
     var gameTimer: Timer?
     var messageTimer: Timer?
@@ -29,6 +33,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     var isIndicatingFlag: Bool = false
     var isHoldingSoy: Bool = false // 醤油を掴んでいるかどうかを追跡
+    
+    var label : SKLabelNode?
+    var spinnyNode : SKShapeNode?
     
     // スワイプ開始位置
     var swipeStartPosition: CGPoint?
@@ -47,6 +54,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
         physicsWorld.gravity = CGVector(dx: 0, dy: 0) // 重力無し
         physicsWorld.contactDelegate = self // 衝突判定を使用するために
+        setupReturnButton()
         setupResetButton()
         setupGame()
     }
@@ -71,13 +79,28 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func setupGame() {
         // 上部の透明な壁
         createInvisibleWall()
+
+        // 床
+        let flooringTexture = SKTexture(imageNamed: "flooring")
+        flooring = SKSpriteNode(texture: flooringTexture, size: CGSize(width: 750, height: 1334))
+        flooring.position = CGPoint(x: frame.midX, y: frame.midY)
+        flooring.zPosition = -2
+        addChild(flooring)
+        
+        // モニター
+        let monitorTexture = SKTexture(imageNamed: "monitor")
+        monitor = SKSpriteNode(texture: monitorTexture, size: CGSize(width: 570, height: 650))
+        monitor.position = CGPoint(x: frame.midX, y: frame.maxY - 280)
+        monitor.zPosition = -1
+        addChild(monitor)
+        
         // 机
         let deskTexture = SKTexture(imageNamed: "desk")
         desk = SKSpriteNode(texture: deskTexture, size: CGSize(width: 550, height: 600))
         desk.position = CGPoint(x: frame.midX, y: frame.midY - 50)
         desk.zPosition = 0
         addChild(desk)
-        
+    
         // タイム計測
         timerLabel = SKLabelNode(text: "タイム: 0秒")
         timerLabel.position = CGPoint(x: frame.midX, y: frame.maxY - 170)
@@ -113,17 +136,40 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         startMessageTimer()
     }
     
+    // 戻るボタン
+    func setupReturnButton() {
+        let buttonSize = CGSize(width: 120, height: 50)
+        returnButton = SKShapeNode(rectOf: buttonSize, cornerRadius: 10)
+        returnButton.fillColor = SKColor.white
+        returnButton.strokeColor = SKColor.black
+        returnButton.lineWidth = 1
+        returnButton.zPosition = 1
+        returnButton.position = CGPoint(x: frame.midX - 200, y: frame.maxY - 75)
+        addChild(returnButton)
+        let returnButtonLabel = SKLabelNode(text: "戻る")
+        returnButtonLabel.position = CGPoint(x: frame.midX - 200, y: frame.maxY - 85)
+        returnButtonLabel.fontSize = 30
+        returnButtonLabel.fontColor = SKColor.black
+        returnButtonLabel.zPosition = 1
+        addChild(returnButtonLabel)
+    }
+    
     // リセットボタン
     func setupResetButton() {
-        let background = SKSpriteNode(color: SKColor.gray, size: CGSize(width: 120, height: 50))
-        background.position = CGPoint(x: frame.midX + 200, y: frame.maxY - 75)
-        addChild(background)
-
-        resetButton = SKLabelNode(text: "リセット")
-        resetButton.position = CGPoint(x: frame.midX + 200, y: frame.maxY - 85)
-        resetButton.fontSize = 30
-        resetButton.fontColor = SKColor.white
+        let buttonSize = CGSize(width: 120, height: 50)
+        resetButton = SKShapeNode(rectOf: buttonSize, cornerRadius: 10)
+        resetButton.fillColor = SKColor.white
+        resetButton.strokeColor = SKColor.black
+        resetButton.lineWidth = 1
+        resetButton.zPosition = 1
+        resetButton.position = CGPoint(x: frame.midX + 200, y: frame.maxY - 75)
         addChild(resetButton)
+        let resetButtonLabel = SKLabelNode(text: "リセット")
+        resetButtonLabel.position = CGPoint(x: frame.midX + 200, y: frame.maxY - 85)
+        resetButtonLabel.fontSize = 30
+        resetButtonLabel.fontColor = SKColor.black
+        resetButtonLabel.zPosition = 1
+        addChild(resetButtonLabel)
     }
     
     // 醤油を生成
@@ -148,7 +194,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         currentMessageLabel?.removeFromParent()
         
         let messageLabel = SKLabelNode(text: message)
-        messageLabel.position = CGPoint(x: frame.midX, y: frame.maxY - 350)
+        messageLabel.position = CGPoint(x: frame.midX, y: frame.maxY - 340)
         messageLabel.fontSize = 40
         messageLabel.fontColor = SKColor.white
         messageLabel.zPosition = 2
@@ -168,7 +214,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             // メッセージの吹き出し
             let messageImageTexture = SKTexture(imageNamed: "messageImage")
             messageImage = SKSpriteNode(texture: messageImageTexture, size: CGSize(width: 450, height: 110))
-            messageImage.position = CGPoint(x: frame.midX, y: frame.maxY - 330)
+            messageImage.position = CGPoint(x: frame.midX, y: frame.maxY - 320)
             if let messageImage = self.messageImage {
                 self.messageImage.zPosition = 1
                 self.addChild(messageImage)
@@ -224,10 +270,21 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // スワイプ開始位置
         swipeStartPosition = touch.location(in: self)
         
+        // 戻るボタン
+        if returnButton.contains(location) {
+            returnTitle()
+        }
+        
         // リセットボタン
         if resetButton.contains(location) {
             resetGame() // リセット処理を呼び出す
         }
+    }
+    
+    func returnTitle () {
+        let titleScene = TitleScene(size: self.size)
+        let transition = SKTransition.fade(withDuration: 1.0)
+        self.view?.presentScene(titleScene, transition: transition)
     }
     
     func resetGame() {
@@ -237,6 +294,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         timerLabel.text = String(format: "タイム: %.2f秒", elapsedTime)
         stopTimer()
         bestTimeLabel.text = "最高タイム:"
+        bestTime = Double.greatestFiniteMagnitude
         arm.position = CGPoint(x: frame.midX, y: -400)
         resetArmPosition()
         // 醤油の初期化
@@ -250,17 +308,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard let touch = touches.first else { return }
         let currentPosition = touch.location(in: self)
-        
-//        // 画面上部に腕を移動できないように
-//        let screenHeight = frame.height
-//        let upperLimitY = screenHeight - screenHeight / 3
-//        let newPosition = CGPoint(x: currentPosition.x, y: currentPosition.y)
-//        if newPosition.y > upperLimitY {
-//            arm.position.y = upperLimitY
-//        } else {
-//            arm.position.y = newPosition.y
-//        }
-//        print(upperLimitY, arm.position)
         
         // スワイプによる移動量を計算
         let diffX = currentPosition.x - arm.position.x
@@ -301,6 +348,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             soyNode.removeFromParent()
         }
 
+        // 効果音
+        playEffectSound()
+        
         // メッセージ吹き出しを削除
         messageImage?.removeFromParent()
         if elapsedTime < 0.5 {
@@ -310,7 +360,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         } else if elapsedTime > 3 {
             showMessage("おっそぉ〜")
         } else {
-            showMessage("ありがとう！")
+            showMessage("ふっつぅ〜！")
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
             self.currentMessageLabel?.removeFromParent()
@@ -328,14 +378,29 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // 腕を初期位置に戻す
         resetArmPosition()
         isHoldingSoy = false
-        // タイマーを初期化
-        elapsedTime = 0
-        timerLabel.text = String(format: "タイム: %.2f秒", elapsedTime)
-        stopTimer()
 
-        // 2秒後に醤油を再生成
+        stopTimer()
+        // 2秒後にタイマーを初期化、醤油を再生成
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            self.elapsedTime = 0
+            self.timerLabel.text = String(format: "タイム: %.2f秒", self.elapsedTime)
             self.spawnSoysauce()
+        }
+    }
+    
+    // 効果音を再生する
+    func playEffectSound() {
+        guard let url = Bundle.main.url(forResource: "effect_take_soy", withExtension: "mp3") else {
+            print("効果音ファイルが見つかりません:effect_take_soy")
+            return
+        }
+        
+        do {
+            effectPlayer = try AVAudioPlayer(contentsOf: url)
+            effectPlayer?.volume = 0.1
+            effectPlayer?.play()
+        } catch {
+            print("効果音の再生に失敗しました:effect_take_soy \(error.localizedDescription)")
         }
     }
     
