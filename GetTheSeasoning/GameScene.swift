@@ -16,9 +16,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var flooring: SKSpriteNode!
     var monitor: SKSpriteNode!
     var desk: SKSpriteNode!
+    var mother: SKSpriteNode!
+    var father: SKSpriteNode!
     var arm: SKSpriteNode!
     var soysauce: SKSpriteNode!
     var messageImage: SKSpriteNode!
+    
+    var talker: Int!
+    
+    var isArmMoveRestriction: Bool = true  // 腕のY軸移動制限
     
     var timerLabel: SKLabelNode!
     var bestTime: TimeInterval = Double.greatestFiniteMagnitude
@@ -100,7 +106,21 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         desk.position = CGPoint(x: frame.midX, y: frame.midY - 50)
         desk.zPosition = 0
         addChild(desk)
-    
+
+        // お父さん
+        let fatherTexture = SKTexture(imageNamed: "father")
+        father = SKSpriteNode(texture: fatherTexture, size: CGSize(width: 400, height: 400))
+        father.position = CGPoint(x: frame.midX - 150, y: frame.midY - 500)
+        father.zPosition = 0
+        addChild(father)
+
+        // お母さん
+        let motherTexture = SKTexture(imageNamed: "mother")
+        mother = SKSpriteNode(texture: motherTexture, size: CGSize(width: 400, height: 400))
+        mother.position = CGPoint(x: frame.midX + 150, y: frame.midY - 500)
+        mother.zPosition = 0
+        addChild(mother)
+        
         // タイム計測
         timerLabel = SKLabelNode(text: "タイム: 0秒")
         timerLabel.position = CGPoint(x: frame.midX, y: frame.maxY - 170)
@@ -123,6 +143,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // 腕に物理ボディを追加
         arm.physicsBody = SKPhysicsBody(texture: armTexture, size: arm.size)
         arm.physicsBody?.isDynamic = true
+//        arm.physicsBody?.allowsRotation = false // 回転しない
         arm.physicsBody?.categoryBitMask = PhysicsCategory.arm
         arm.physicsBody?.contactTestBitMask = PhysicsCategory.soySauce | PhysicsCategory.wall
         arm.physicsBody?.collisionBitMask = PhysicsCategory.soySauce | PhysicsCategory.wall
@@ -134,6 +155,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         spawnSoysauce()
         // 指示
         startMessageTimer()
+    }
+    
+    override func update(_ currentTime: TimeInterval) {
+        // 腕の位置を制限する
+        if isArmMoveRestriction {
+            arm.position.y = min(frame.midY - 400, arm.position.y) // 初期位置より上には移動不可
+        }
     }
     
     // 戻るボタン
@@ -194,9 +222,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         currentMessageLabel?.removeFromParent()
         
         let messageLabel = SKLabelNode(text: message)
-        messageLabel.position = CGPoint(x: frame.midX, y: frame.maxY - 340)
+        if talker == 0 {
+            // father
+            messageLabel.position = CGPoint(x: frame.midX - 150, y: frame.midY - 365)
+        } else {
+            // mother
+            messageLabel.position = CGPoint(x: frame.midX + 150, y: frame.midY - 365)
+        }
         messageLabel.fontSize = 40
-        messageLabel.fontColor = SKColor.white
+        messageLabel.fontColor = SKColor.black
         messageLabel.zPosition = 2
         addChild(messageLabel)
         // 現在のメッセージ
@@ -208,19 +242,28 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         guard !isIndicatingFlag else { return }
         isIndicatingFlag = true;
 
-        let interval = Double.random(in: 6.0...8.0);
+        let interval = Double.random(in: 7.0...10.0);
         messageTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
             guard let self = self else { return }
+            talker = Int.random(in: 0...1)  // 指示を出す人
             // メッセージの吹き出し
-            let messageImageTexture = SKTexture(imageNamed: "messageImage")
-            messageImage = SKSpriteNode(texture: messageImageTexture, size: CGSize(width: 450, height: 110))
-            messageImage.position = CGPoint(x: frame.midX, y: frame.maxY - 320)
+            self.messageImage?.removeFromParent()
+            let messageHardTexture = SKTexture(imageNamed: "message_hard")
+            messageImage = SKSpriteNode(texture: messageHardTexture, size: CGSize(width: 370, height: 110))
+            if talker == 0 {
+                // father
+                messageImage.position = CGPoint(x: frame.midX - 150, y: frame.midY - 350)
+            } else {
+                // mother
+                messageImage.position = CGPoint(x: frame.midX + 150, y: frame.midY - 350)
+            }
             if let messageImage = self.messageImage {
                 self.messageImage.zPosition = 1
                 self.addChild(messageImage)
             }
             self.showMessage("醤油取って！")
             self.startTimer()
+            isArmMoveRestriction = false
         }
     }
     
@@ -338,8 +381,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         wall.physicsBody = SKPhysicsBody(rectangleOf: wall.size)
         wall.physicsBody?.isDynamic = false
         wall.physicsBody?.categoryBitMask = PhysicsCategory.wall
-        wall.physicsBody?.contactTestBitMask = PhysicsCategory.arm
-        wall.physicsBody?.collisionBitMask = PhysicsCategory.arm
+        wall.physicsBody?.contactTestBitMask = PhysicsCategory.arm | PhysicsCategory.soySauce
+        wall.physicsBody?.collisionBitMask = PhysicsCategory.arm | PhysicsCategory.soySauce
         addChild(wall)
     }
     
@@ -353,16 +396,32 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         // メッセージ吹き出しを削除
         messageImage?.removeFromParent()
-        if elapsedTime < 0.5 {
-            showMessage("はやすぎぃ〜")
-        } else if elapsedTime < 1 {
-            showMessage("はっやぁ〜")
-        } else if elapsedTime > 3 {
-            showMessage("おっそぉ〜")
+        // メッセージの吹き出し(柔らかい口調)
+        let messageSoftTexture = SKTexture(imageNamed: "message_soft")
+        messageImage = SKSpriteNode(texture: messageSoftTexture, size: CGSize(width: 330, height: 110))
+        if talker == 0 {
+            // father
+            messageImage.position = CGPoint(x: frame.midX - 150, y: frame.midY - 365)
         } else {
-            showMessage("ふっつぅ〜！")
+            // mother
+            messageImage.position = CGPoint(x: frame.midX + 150, y: frame.midY - 365)
         }
+        if let messageImage = self.messageImage {
+            self.messageImage.zPosition = 1
+            self.addChild(messageImage)
+        }
+        if elapsedTime < 0.5 {
+            showMessage("はやっ！")
+        } else if elapsedTime < 1 {
+            showMessage("早いな〜")
+        } else if elapsedTime > 3 {
+            showMessage("遅いな〜")
+        } else {
+            showMessage("ありがとさん")
+        }
+        // メッセージを削除
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            self.messageImage?.removeFromParent()
             self.currentMessageLabel?.removeFromParent()
             self.currentMessageLabel = nil
         }
@@ -375,9 +434,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         // 指示中フラグの解除
         isIndicatingFlag = false;
-        // 腕を初期位置に戻す
+        // 腕を初期状態にする
         resetArmPosition()
         isHoldingSoy = false
+        isArmMoveRestriction = true
 
         stopTimer()
         // 2秒後にタイマーを初期化、醤油を再生成
