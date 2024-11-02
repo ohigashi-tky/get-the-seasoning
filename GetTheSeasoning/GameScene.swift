@@ -7,8 +7,9 @@
 
 import SpriteKit
 import AVFoundation
+import GameKit
 
-class GameScene: SKScene, SKPhysicsContactDelegate {
+class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelegate {
     
     var audioPlayer: AVAudioPlayer?
     var effectPlayer: AVAudioPlayer?
@@ -24,24 +25,33 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     var talker: Int!
     
+    var playCount: Int = 0
+    let oneGamePlayCount: Int = 3
+    
     var isArmMoveRestriction: Bool = true  // 腕のY軸移動制限
     
     var timerLabel: SKLabelNode!
     var bestTime: TimeInterval = Double.greatestFiniteMagnitude
     var bestTimeLabel: SKLabelNode!
+    var totalTimeLabel: SKLabelNode!
     var currentMessageLabel: SKLabelNode?
     var returnButton: SKShapeNode!
     var resetButton: SKShapeNode!
+    var closeButtonBg: SKShapeNode!
+    var rankingButtonBg: SKShapeNode!
     
     var gameTimer: Timer?
     var messageTimer: Timer?
     var elapsedTime: TimeInterval = 0
+    var totalTime: TimeInterval = 0
     
-    var isIndicatingFlag: Bool = false
+    var isIndicatingFlag: Bool = false  // 指示中フラグ
     var isHoldingSoy: Bool = false // 醤油を掴んでいるかどうかを追跡
     
     var label : SKLabelNode?
     var spinnyNode : SKShapeNode?
+    
+    var resultDialog: SKSpriteNode?
     
     // スワイプ開始位置
     var swipeStartPosition: CGPoint?
@@ -50,6 +60,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         static let arm: UInt32 = 0x1 << 0 // 腕のカテゴリ
         static let soySauce: UInt32 = 0x1 << 1 // 醤油のカテゴリ
         static let wall: UInt32 = 0x1 << 2 // 壁のカテゴリ
+    }
+    
+    // 定数
+    enum addPosition {
+        static let messageBgLeft: (x: CGFloat, y: CGFloat) = (-150, -285)
+        static let messageBgRight: (x: CGFloat, y: CGFloat) = (150, -285)
+        static let messageLabelLeft: (x: CGFloat, y: CGFloat) = (-150, -300)
+        static let messageLabelRight: (x: CGFloat, y: CGFloat) = (150, -300)
     }
     
     // 画面が呼び出された時
@@ -81,60 +99,56 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             print("error Playing BGM: \(error.localizedDescription)")
         }
     }
+
+    func createObject(textureName: String, size: CGSize, position: CGPoint, zPosition: CGFloat, isAddChild: Bool = true) -> SKSpriteNode {
+        let texture = SKTexture(imageNamed: textureName)
+        let spriteNode = SKSpriteNode(texture: texture, size: size)
+        spriteNode.position = position
+        spriteNode.zPosition = zPosition
+        if isAddChild { addChild(spriteNode) }
+        return spriteNode
+    }
     
     func setupGame() {
         // 上部の透明な壁
         createInvisibleWall()
 
         // 床
-        let flooringTexture = SKTexture(imageNamed: "flooring")
-        flooring = SKSpriteNode(texture: flooringTexture, size: CGSize(width: 750, height: 1334))
-        flooring.position = CGPoint(x: frame.midX, y: frame.midY)
-        flooring.zPosition = -2
-        addChild(flooring)
+        _ = createObject(textureName: "flooring", size: CGSize(width: 750, height: 1334), position: CGPoint(x: frame.midX, y: frame.midY), zPosition: -2)
         
         // モニター
-        let monitorTexture = SKTexture(imageNamed: "monitor")
-        monitor = SKSpriteNode(texture: monitorTexture, size: CGSize(width: 570, height: 650))
-        monitor.position = CGPoint(x: frame.midX, y: frame.maxY - 280)
-        monitor.zPosition = -1
-        addChild(monitor)
+        _ = createObject(textureName: "monitor", size: CGSize(width: 570, height: 650), position: CGPoint(x: frame.midX, y: frame.maxY - 280), zPosition: -1)
         
         // 机
-        let deskTexture = SKTexture(imageNamed: "desk")
-        desk = SKSpriteNode(texture: deskTexture, size: CGSize(width: 550, height: 600))
-        desk.position = CGPoint(x: frame.midX, y: frame.midY - 50)
-        desk.zPosition = 0
-        addChild(desk)
-
+        _ = createObject(textureName: "desk", size: CGSize(width: 550, height: 600), position: CGPoint(x: frame.midX, y: frame.midY - 50), zPosition: 0)
+        
         // お父さん
-        let fatherTexture = SKTexture(imageNamed: "father")
-        father = SKSpriteNode(texture: fatherTexture, size: CGSize(width: 400, height: 400))
-        father.position = CGPoint(x: frame.midX - 150, y: frame.midY - 500)
-        father.zPosition = 0
-        addChild(father)
-
+        _ = createObject(textureName: "father", size: CGSize(width: 400, height: 400), position: CGPoint(x: frame.midX - 150, y: frame.midY - 500), zPosition: 0)
+        
         // お母さん
-        let motherTexture = SKTexture(imageNamed: "mother")
-        mother = SKSpriteNode(texture: motherTexture, size: CGSize(width: 400, height: 400))
-        mother.position = CGPoint(x: frame.midX + 150, y: frame.midY - 500)
-        mother.zPosition = 0
-        addChild(mother)
+        _ = createObject(textureName: "mother", size: CGSize(width: 400, height: 400), position: CGPoint(x: frame.midX + 150, y: frame.midY - 500), zPosition: 0)
         
         // タイム計測
         timerLabel = SKLabelNode(text: "タイム: 0秒")
-        timerLabel.position = CGPoint(x: frame.midX, y: frame.maxY - 170)
+        timerLabel.position = CGPoint(x: frame.midX, y: frame.maxY - 180)
         timerLabel.fontSize = 40
         timerLabel.fontColor = SKColor.white
         addChild(timerLabel)
         
         // 最高タイム
         bestTimeLabel = SKLabelNode(text: "最高タイム:")
-        bestTimeLabel.position = CGPoint(x: frame.midX, y: frame.maxY - 250)
+        bestTimeLabel.position = CGPoint(x: frame.midX, y: frame.maxY - 260)
         bestTimeLabel.fontSize = 40
         bestTimeLabel.fontColor = SKColor.yellow
         addChild(bestTimeLabel)
-        
+
+        // 合計タイム(1ゲーム)
+        totalTimeLabel = SKLabelNode(text: "合計タイム:")
+        totalTimeLabel.position = CGPoint(x: frame.midX, y: frame.maxY - 340)
+        totalTimeLabel.fontSize = 40
+        totalTimeLabel.fontColor = SKColor.green
+        addChild(totalTimeLabel)
+
         // 腕を表示
         let armTexture = SKTexture(imageNamed: "arm")
         arm = SKSpriteNode(texture: armTexture, size: CGSize(width: 150, height: 300))
@@ -143,7 +157,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // 腕に物理ボディを追加
         arm.physicsBody = SKPhysicsBody(texture: armTexture, size: arm.size)
         arm.physicsBody?.isDynamic = true
-//        arm.physicsBody?.allowsRotation = false // 回転しない
+//        arm.physicsBody?.allowsRotation = false // 回転しない 動作が若干不安定になる
         arm.physicsBody?.categoryBitMask = PhysicsCategory.arm
         arm.physicsBody?.contactTestBitMask = PhysicsCategory.soySauce | PhysicsCategory.wall
         arm.physicsBody?.collisionBitMask = PhysicsCategory.soySauce | PhysicsCategory.wall
@@ -224,10 +238,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let messageLabel = SKLabelNode(text: message)
         if talker == 0 {
             // father
-            messageLabel.position = CGPoint(x: frame.midX - 150, y: frame.midY - 365)
+            messageLabel.position = CGPoint(x: frame.midX + addPosition.messageLabelLeft.x, y: frame.midY + addPosition.messageLabelLeft.y)
         } else {
             // mother
-            messageLabel.position = CGPoint(x: frame.midX + 150, y: frame.midY - 365)
+            messageLabel.position = CGPoint(x: frame.midX + addPosition.messageLabelRight.x, y: frame.midY + addPosition.messageLabelRight.y)
         }
         messageLabel.fontSize = 40
         messageLabel.fontColor = SKColor.black
@@ -240,10 +254,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func startMessageTimer() {
         // 指示中でないなら指示を行う
         guard !isIndicatingFlag else { return }
-        isIndicatingFlag = true;
 
         let interval = Double.random(in: 7.0...10.0);
         messageTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
+            if self?.isPaused == true || self?.isIndicatingFlag == true { return }
             guard let self = self else { return }
             talker = Int.random(in: 0...1)  // 指示を出す人
             // メッセージの吹き出し
@@ -252,10 +266,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             messageImage = SKSpriteNode(texture: messageHardTexture, size: CGSize(width: 370, height: 110))
             if talker == 0 {
                 // father
-                messageImage.position = CGPoint(x: frame.midX - 150, y: frame.midY - 350)
+                messageImage.position = CGPoint(x: frame.midX + addPosition.messageBgLeft.x, y: frame.midY + addPosition.messageBgLeft.y)
             } else {
                 // mother
-                messageImage.position = CGPoint(x: frame.midX + 150, y: frame.midY - 350)
+                messageImage.position = CGPoint(x: frame.midX + addPosition.messageBgRight.x, y: frame.midY + addPosition.messageBgRight.y)
             }
             if let messageImage = self.messageImage {
                 self.messageImage.zPosition = 1
@@ -264,7 +278,78 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             self.showMessage("醤油取って！")
             self.startTimer()
             isArmMoveRestriction = false
+            isIndicatingFlag = true
+            if playCount < oneGamePlayCount {
+                playCount += 1
+            } else {
+                playCount = 1
+            }
         }
+    }
+    
+    // 1ゲームごとの結果を表示
+    func showResultDialog() {
+        isPaused = true
+        
+        let resultDialogObject = createObject(textureName: "board", size: CGSize(width: 600, height: 650), position: CGPoint(x: frame.midX, y: frame.midY), zPosition: 100, isAddChild: false)
+
+        let titleLabel = SKLabelNode(text: "結果")
+        titleLabel.position = CGPoint(x: 0, y: 200)
+        titleLabel.zPosition = 101
+        titleLabel.fontColor = SKColor.black
+        titleLabel.fontSize = 50
+        resultDialogObject.addChild(titleLabel)
+        
+        let timeLabel = SKLabelNode(text: String(format: "合計タイム: %.2f秒", totalTime))
+        timeLabel.position = CGPoint(x: 0, y: 0)
+        timeLabel.zPosition = 101
+        timeLabel.fontColor = SKColor.black
+        timeLabel.fontSize = 50
+        resultDialogObject.addChild(timeLabel)
+
+        let rankingbuttonSize = CGSize(width: 400, height: 70)
+        rankingButtonBg = SKShapeNode(rectOf: rankingbuttonSize, cornerRadius: 10)
+        rankingButtonBg.fillColor = SKColor.white
+        rankingButtonBg.strokeColor = SKColor.black
+        rankingButtonBg.lineWidth = 1
+        rankingButtonBg.zPosition = 101
+        rankingButtonBg.position = CGPoint(x: 0, y: -140)
+        resultDialogObject.addChild(rankingButtonBg)
+        let rankingButton = SKLabelNode(text: "ランキングを見る")
+        rankingButton.position = CGPoint(x: 0, y: -160)
+        rankingButton.zPosition = 101
+        rankingButton.fontColor = SKColor.black
+        rankingButton.fontSize = 50
+        rankingButton.name = "rankingButton"
+        resultDialogObject.addChild(rankingButton)
+        
+        let buttonSize = CGSize(width: 160, height: 70)
+        closeButtonBg = SKShapeNode(rectOf: buttonSize, cornerRadius: 10)
+        closeButtonBg.fillColor = SKColor.white
+        closeButtonBg.strokeColor = SKColor.black
+        closeButtonBg.lineWidth = 1
+        closeButtonBg.zPosition = 101
+        closeButtonBg.position = CGPoint(x: 0, y: -220)
+        resultDialogObject.addChild(closeButtonBg)
+        let closeButton = SKLabelNode(text: "閉じる")
+        closeButton.position = CGPoint(x: 0, y: -240)
+        closeButton.zPosition = 101
+        closeButton.fontColor = SKColor.black
+        closeButton.fontSize = 50
+        closeButton.name = "closeButton"
+        resultDialogObject.addChild(closeButton)
+        
+        addChild(resultDialogObject)
+        resultDialog = resultDialogObject
+    }
+    
+    func closeResultDialog() {
+        // ダイアログを削除
+        resultDialog?.removeFromParent()
+        resultDialog = nil
+        
+        // ゲームの挙動を再開
+        isPaused = false
     }
     
     // タイム計測
@@ -310,17 +395,32 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         guard let touch = touches.first else { return }
         let location = touch.location(in: self)
         
-        // スワイプ開始位置
-        swipeStartPosition = touch.location(in: self)
-        
-        // 戻るボタン
-        if returnButton.contains(location) {
-            returnTitle()
+        if (!isPaused) {
+            // スワイプ開始位置
+            swipeStartPosition = touch.location(in: self)
+            // 戻るボタン
+            if returnButton.contains(location) {
+                returnTitle()
+            }
+            // リセットボタン
+            if resetButton.contains(location) {
+                resetGame() // リセット処理を呼び出す
+            }
         }
         
-        // リセットボタン
-        if resetButton.contains(location) {
-            resetGame() // リセット処理を呼び出す
+        // 結果ダイアログの各種ボタン
+        if let dialog = resultDialog, dialog.contains(location) {
+            let nodesAtPoint = nodes(at: location)
+            for node in nodesAtPoint {
+                if node.name == "rankingButton" {
+                    showLeaderboard()
+                    break
+                }
+                if node.name == "closeButton" {
+                    closeResultDialog()
+                    break
+                }
+            }
         }
     }
     
@@ -330,6 +430,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         self.view?.presentScene(titleScene, transition: transition)
     }
     
+    // TODO: リファクタリング
     func resetGame() {
         currentMessageLabel?.removeFromParent()
         messageImage?.removeFromParent()
@@ -338,6 +439,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         stopTimer()
         bestTimeLabel.text = "最高タイム:"
         bestTime = Double.greatestFiniteMagnitude
+        totalTimeLabel.text = "合計タイム:"
         arm.position = CGPoint(x: frame.midX, y: -400)
         resetArmPosition()
         // 醤油の初期化
@@ -360,10 +462,22 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let speedFactor: CGFloat = 1 // 移動の滑らかさ調整
         arm.position = CGPoint(x: arm.position.x + diffX * speedFactor, y: arm.position.y + diffY * speedFactor)
 
-        // 醤油を掴んだ状態で下部に到達したら取ったことにする
+        // 醤油を掴んだ状態で下部に到達すると取ったことにする 指示を出した人物側に到達でOK
         if let soyNode = self.childNode(withName: "soysauce" ) {
-            let soyNodeGlobalPosition = soyNode.convert(soyNode.position, to: self)
-            if soyNodeGlobalPosition.y < frame.minY + (frame.height / 2.2) {
+            let soyNodePosition = soyNode.position
+            let isBottom = soyNodePosition.y < frame.height / 3.2
+            if !isBottom { return }
+            
+            var isReachArea = false
+            if talker == 0 {
+                // father
+                isReachArea = soyNodePosition.x < frame.midX
+            } else {
+                // mother
+                isReachArea = soyNodePosition.x > frame.midX
+            }
+            
+            if isReachArea {
                 removeSoysauce()
             }
         }
@@ -393,7 +507,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
         // 効果音
         playEffectSound()
-        
+
         // メッセージ吹き出しを削除
         messageImage?.removeFromParent()
         // メッセージの吹き出し(柔らかい口調)
@@ -401,10 +515,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         messageImage = SKSpriteNode(texture: messageSoftTexture, size: CGSize(width: 330, height: 110))
         if talker == 0 {
             // father
-            messageImage.position = CGPoint(x: frame.midX - 150, y: frame.midY - 365)
+            messageImage.position = CGPoint(x: frame.midX + addPosition.messageLabelLeft.x, y: frame.midY + addPosition.messageLabelLeft.y)
         } else {
             // mother
-            messageImage.position = CGPoint(x: frame.midX + 150, y: frame.midY - 365)
+            messageImage.position = CGPoint(x: frame.midX + addPosition.messageLabelRight.x, y: frame.midY + addPosition.messageLabelRight.y)
         }
         if let messageImage = self.messageImage {
             self.messageImage.zPosition = 1
@@ -413,11 +527,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if elapsedTime < 0.5 {
             showMessage("はやっ！")
         } else if elapsedTime < 1 {
-            showMessage("早いな〜")
+            showMessage("早いねー")
         } else if elapsedTime > 3 {
-            showMessage("遅いな〜")
+            showMessage("遅いッ！")
         } else {
-            showMessage("ありがとさん")
+            showMessage("ありがとね")
         }
         // メッセージを削除
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
@@ -431,6 +545,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             bestTime = elapsedTime
             bestTimeLabel.text = String(format: "最高タイム: %.2f秒", bestTime)
         }
+        // 合計タイム
+        totalTime += elapsedTime
+        totalTimeLabel.text = String(format: "合計タイム: %.2f秒", totalTime)
         
         // 指示中フラグの解除
         isIndicatingFlag = false;
@@ -440,12 +557,64 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         isArmMoveRestriction = true
 
         stopTimer()
+        
+        // 1ゲームごとに結果を表示
+        if playCount == oneGamePlayCount {
+            showResultDialog()
+            reportScore(totalTime: totalTime)
+            resetGame()
+        }
+        
         // 2秒後にタイマーを初期化、醤油を再生成
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
             self.elapsedTime = 0
             self.timerLabel.text = String(format: "タイム: %.2f秒", self.elapsedTime)
             self.spawnSoysauce()
         }
+    }
+    
+    // GameCenterランキングを表示
+    func reportScore(totalTime: TimeInterval) {
+        // 整数に変換してスコアとして報告 Int型で送るために変換（12.34秒で登録の場合は1234）
+        let scoreValue = Int(totalTime * 100)
+        if GKLocalPlayer.local.isAuthenticated {
+            GKLeaderboard.submitScore(scoreValue, context: 0, player: GKLocalPlayer.local, leaderboardIDs: ["takuya.TakeSoyGame.leaderboard"]) { error in
+                print(error ?? "")
+            }
+            print("reportScore: スコアを送信しました。\(scoreValue)")
+        } else {
+            print("reportScore: GameCenterにログインしていません")
+        }
+    }
+    
+    func showLeaderboard() {
+        // リーダーボードIDを指定して GKLeaderboard を初期化
+        if GKLocalPlayer.local.isAuthenticated {
+            print("showLeaderboard: リーダーボード表示前")
+            GKLeaderboard.loadLeaderboards(IDs: ["takuya.TakeSoyGame.leaderboard"]) { leaderboards, error in
+                if let error = error {
+                    print("Error showLeaderboard(): \(error.localizedDescription)")
+                    return
+                }
+                
+                // リーダーボードを取得してGameCenterのビューコントローラーを表示
+                print("showLeaderboard: リーダーボード表示")
+                if let leaderboard = leaderboards?.first {
+                    let gcViewController = GKGameCenterViewController(leaderboard: leaderboard, playerScope: .global)
+                    gcViewController.gameCenterDelegate = self
+                    
+                    if let presentingVC = self.view?.window?.rootViewController {
+                        presentingVC.present(gcViewController, animated: true, completion: nil)
+                    }
+                }
+            }
+        } else {
+            print("reportScore: GameCenterにログインしていません")
+        }
+    }
+    
+    func gameCenterViewControllerDidFinish(_ gameCenterViewController: GKGameCenterViewController) {
+        gameCenterViewController.dismiss(animated: true, completion: nil)
     }
     
     // 効果音を再生する
