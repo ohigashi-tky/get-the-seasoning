@@ -560,9 +560,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         let scoreValue = Int(totalTime * 100)
         if GKLocalPlayer.local.isAuthenticated {
             GKLeaderboard.submitScore(scoreValue, context: 0, player: GKLocalPlayer.local, leaderboardIDs: ["takuya.TakeSoyGame.leaderboard"]) { error in
-                print(error ?? "")
+                if let error = error {
+                    print("Error reportScore: スコア送信に失敗 \(error.localizedDescription)")
+                } else {
+                    print("OK reportScore: スコア送信に成功 \(scoreValue)")
+                }
             }
-            print("reportScore: スコアを送信しました。\(scoreValue)")
         } else {
             print("reportScore: GameCenterにログインしていません")
         }
