@@ -72,8 +72,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
     
     // 画面が呼び出された時
     override func didMove(to view: SKView) {
-        playBackgroundMusic()
-        
         self.scaleMode = .aspectFill
 
         physicsWorld.gravity = CGVector(dx: 0, dy: 0) // 重力無し
@@ -81,23 +79,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         setupReturnButton()
         setupResetButton()
         setupGame()
-    }
-    
-    func playBackgroundMusic() {
-        // 音声ファイルのパスを取得
-        guard let url = Bundle.main.url(forResource: "bgm", withExtension: "mp3") else {
-            print("BGM file not exist")
-            return
-        }
-        
-        do {
-            audioPlayer = try AVAudioPlayer(contentsOf: url)
-            audioPlayer?.numberOfLoops = -1 // -1:無限ループ
-            audioPlayer?.volume = 0.1
-            audioPlayer?.play()
-        } catch {
-            print("error Playing BGM: \(error.localizedDescription)")
-        }
     }
 
     func createObject(textureName: String, size: CGSize, position: CGPoint, zPosition: CGFloat, isAddChild: Bool = true) -> SKSpriteNode {
