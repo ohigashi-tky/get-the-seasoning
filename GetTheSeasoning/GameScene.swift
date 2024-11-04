@@ -60,6 +60,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         static let arm: UInt32 = 0x1 << 0 // 腕のカテゴリ
         static let soySauce: UInt32 = 0x1 << 1 // 醤油のカテゴリ
         static let wall: UInt32 = 0x1 << 2 // 壁のカテゴリ
+        static let cooking: UInt32 = 0x1 << 2
     }
     
     // 定数
@@ -103,7 +104,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         _ = createObject(textureName: "desk", size: CGSize(width: 550, height: 600), position: CGPoint(x: frame.midX, y: frame.midY - 50), zPosition: 0)
         
         // 料理（障害物）
-        _ = createCookingObject()
+        createCookingObject()
         
         // お父さん
         _ = createObject(textureName: "father", size: CGSize(width: 400, height: 400), position: CGPoint(x: frame.midX - 150, y: frame.midY - 500), zPosition: 0)
@@ -142,8 +143,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         arm.physicsBody?.isDynamic = true
 //        arm.physicsBody?.allowsRotation = false // 回転しない 動作が若干不安定になる
         arm.physicsBody?.categoryBitMask = PhysicsCategory.arm
-        arm.physicsBody?.contactTestBitMask = PhysicsCategory.soySauce | PhysicsCategory.wall
-        arm.physicsBody?.collisionBitMask = PhysicsCategory.soySauce | PhysicsCategory.wall
+//        arm.physicsBody?.contactTestBitMask = PhysicsCategory.soySauce | PhysicsCategory.wall
+//        arm.physicsBody?.collisionBitMask = PhysicsCategory.soySauce | PhysicsCategory.wall
+        arm.physicsBody?.contactTestBitMask = 0
+        arm.physicsBody?.collisionBitMask = 0
         arm.physicsBody?.restitution = 0.0 // 衝突時の反発
         arm.physicsBody?.friction = 0.0 // 摩擦
         addChild(arm)
@@ -156,9 +159,41 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
     
     // 机の上の料理を生成（ランダム）
     func createCookingObject() {
+        let cookingNames: [String] = [
+              "pasuta_meat"
+            , "medamayaki"
+            , "sanma"
+            , "korokke"
+            , "syougayaki"
+            , "rice"
+            , "tonnjiru"
+            , "udon"
+        ]
         // 生成する範囲
         
         // 料理一覧をループして生成
+        for (index, cookingName) in cookingNames.enumerated() {
+            let addXPos = if index < 4 { index * 145 } else { (index - 4) * 145 };
+            let addYPos = if index < 4 { 0 } else { 150 };
+            // 障害物として定義
+            _ = createSKPhysicsBody(textureName: cookingName, size: CGSize(width: 135, height: 110), position: CGPoint(x: frame.minX + CGFloat(160 + addXPos), y: frame.midY - CGFloat(35 + addYPos)), zPosition: 1, category: PhysicsCategory.soySauce)
+        }
+    }
+    
+    // 衝突判定有りの物体を生成
+    func createSKPhysicsBody(textureName: String, size: CGSize, position: CGPoint, zPosition: CGFloat, category: UInt32, isAddChild: Bool = true) -> SKSpriteNode {
+        let texture = SKTexture(imageNamed: textureName)
+        let spriteNode = SKSpriteNode(texture: texture, size: size)
+        spriteNode.position = position
+        spriteNode.zPosition = zPosition
+        spriteNode.physicsBody = SKPhysicsBody(texture: texture, size: size)
+        spriteNode.physicsBody?.isDynamic = true
+        spriteNode.physicsBody?.categoryBitMask = PhysicsCategory.cooking
+        spriteNode.physicsBody?.contactTestBitMask = category   // 接触したときの通知先
+        spriteNode.physicsBody?.collisionBitMask = category    // 指定した物体と衝突判定
+        if isAddChild { addChild(spriteNode) }
+
+        return spriteNode
     }
     
     override func update(_ currentTime: TimeInterval) {
@@ -207,16 +242,18 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
     // 醤油を生成
     func spawnSoysauce() {
         let soysauceTexture = SKTexture(imageNamed: "soysauce")
-        soysauce = SKSpriteNode(texture: soysauceTexture, size: CGSize(width: 170, height: 200))
-        soysauce.position = CGPoint(x: frame.midX, y: frame.midY + 100)
+        soysauce = SKSpriteNode(texture: soysauceTexture, size: CGSize(width: 150, height: 180))
+        soysauce.position = CGPoint(x: frame.midX, y: frame.midY + 160)
         soysauce.zPosition = 1
         
         // 醤油に物理ボディを追加
         soysauce.physicsBody = SKPhysicsBody(texture: soysauceTexture, size: soysauce.size)
         soysauce.physicsBody?.isDynamic = true
         soysauce.physicsBody?.categoryBitMask = PhysicsCategory.soySauce
-        soysauce.physicsBody?.contactTestBitMask = PhysicsCategory.arm  // 接触したときに腕に通知
-        soysauce.physicsBody?.collisionBitMask = PhysicsCategory.arm    // 腕と背色すると衝突として判定される
+        // 接触で指定した物体に通知
+        soysauce.physicsBody?.contactTestBitMask = PhysicsCategory.arm | PhysicsCategory.cooking
+        // 指定した物体と接触で衝突判定
+        soysauce.physicsBody?.collisionBitMask = PhysicsCategory.arm | PhysicsCategory.cooking
         soysauce.name = "soysauce"
         addChild(soysauce)
     }
