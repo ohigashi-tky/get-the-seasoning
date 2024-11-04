@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		B0A135542CD8BD100008B682 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = B0A135532CD8BD100008B682 /* GoogleMobileAds */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		B050656A2CC9102A00FE32F6 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -29,9 +33,22 @@
 		B05065732CC9102A00FE32F6 /* GetTheSeasoningUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GetTheSeasoningUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		B0A135562CD8BEF60008B682 /* Exceptions for "GetTheSeasoning" folder in "GetTheSeasoning" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = B050654F2CC9102900FE32F6 /* GetTheSeasoning */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		B05065522CC9102900FE32F6 /* GetTheSeasoning */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				B0A135562CD8BEF60008B682 /* Exceptions for "GetTheSeasoning" folder in "GetTheSeasoning" target */,
+			);
 			path = GetTheSeasoning;
 			sourceTree = "<group>";
 		};
@@ -52,6 +69,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B0A135542CD8BD100008B682 /* GoogleMobileAds in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -78,6 +96,7 @@
 				B05065522CC9102900FE32F6 /* GetTheSeasoning */,
 				B050656C2CC9102A00FE32F6 /* GetTheSeasoningTests */,
 				B05065762CC9102A00FE32F6 /* GetTheSeasoningUITests */,
+				B0A135522CD8BD100008B682 /* Frameworks */,
 				B05065512CC9102900FE32F6 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -90,6 +109,13 @@
 				B05065732CC9102A00FE32F6 /* GetTheSeasoningUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		B0A135522CD8BD100008B682 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -112,6 +138,7 @@
 			);
 			name = GetTheSeasoning;
 			packageProductDependencies = (
+				B0A135532CD8BD100008B682 /* GoogleMobileAds */,
 			);
 			productName = GetTheSeasoning;
 			productReference = B05065502CC9102900FE32F6 /* GetTheSeasoning.app */;
@@ -195,6 +222,9 @@
 			);
 			mainGroup = B05065472CC9102900FE32F6;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				B096A2A02CD8B3680011A16E /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = B05065512CC9102900FE32F6 /* Products */;
 			projectDirPath = "";
@@ -398,6 +428,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = Q58MD9X38V;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = GetTheSeasoning/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "しょうゆ取ってゲーム";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -433,6 +464,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = Q58MD9X38V;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = GetTheSeasoning/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "しょうゆ取ってゲーム";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -570,6 +602,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		B096A2A02CD8B3680011A16E /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googleads/swift-package-manager-google-mobile-ads";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 11.11.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		B0A135532CD8BD100008B682 /* GoogleMobileAds */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B096A2A02CD8B3680011A16E /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */;
+			productName = GoogleMobileAds;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = B05065482CC9102900FE32F6 /* Project object */;
 }

@@ -70,7 +70,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         static let messageLabelRight: (x: CGFloat, y: CGFloat) = (150, -300)
     }
     
-    // 画面が呼び出された時
     override func didMove(to view: SKView) {
         self.scaleMode = .aspectFill
 
@@ -102,6 +101,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         
         // 机
         _ = createObject(textureName: "desk", size: CGSize(width: 550, height: 600), position: CGPoint(x: frame.midX, y: frame.midY - 50), zPosition: 0)
+        
+        // 料理（障害物）
+        _ = createCookingObject()
         
         // お父さん
         _ = createObject(textureName: "father", size: CGSize(width: 400, height: 400), position: CGPoint(x: frame.midX - 150, y: frame.midY - 500), zPosition: 0)
@@ -150,6 +152,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         spawnSoysauce()
         // 指示
         startMessageTimer()
+    }
+    
+    // 机の上の料理を生成（ランダム）
+    func createCookingObject() {
+        // 生成する範囲
+        
+        // 料理一覧をループして生成
     }
     
     override func update(_ currentTime: TimeInterval) {
@@ -294,10 +303,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         rankingButtonBg.strokeColor = SKColor.black
         rankingButtonBg.lineWidth = 1
         rankingButtonBg.zPosition = 101
-        rankingButtonBg.position = CGPoint(x: 0, y: -140)
+        rankingButtonBg.position = CGPoint(x: 0, y: -110)
         resultDialogObject.addChild(rankingButtonBg)
         let rankingButton = SKLabelNode(text: "ランキングを見る")
-        rankingButton.position = CGPoint(x: 0, y: -160)
+        rankingButton.position = CGPoint(x: 0, y: -130)
         rankingButton.zPosition = 101
         rankingButton.fontColor = SKColor.black
         rankingButton.fontSize = 50
@@ -413,6 +422,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
     
     // TODO: リファクタリング
     func resetGame() {
+        playCount = 0   // プレイ回数
         currentMessageLabel?.removeFromParent()
         messageImage?.removeFromParent()
         elapsedTime = 0
@@ -421,6 +431,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         bestTimeLabel.text = "最高タイム:"
         bestTime = Double.greatestFiniteMagnitude
         totalTimeLabel.text = "合計タイム:"
+        totalTime = 0
         arm.position = CGPoint(x: frame.midX, y: -400)
         resetArmPosition()
         // 醤油の初期化

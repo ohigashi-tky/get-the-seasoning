@@ -8,9 +8,13 @@
 import UIKit
 import SpriteKit
 import GameplayKit
+import GoogleMobileAds
 
-class GameViewController: UIViewController {
+class GameViewController: UIViewController, GADBannerViewDelegate {
 
+    // 広告
+    var bannerView: GADBannerView!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -24,8 +28,29 @@ class GameViewController: UIViewController {
                 }
             }
         }
+        
+        let viewWidth = view.frame.inset(by: view.safeAreaInsets).width
+        let adaptiveSize = GADCurrentOrientationAnchoredAdaptiveBannerAdSizeWithWidth(viewWidth)
+        bannerView = GADBannerView(adSize: adaptiveSize)
+        
+        addBannerViewToView(bannerView)
+        
+        bannerView.adUnitID = "ca-app-pub-3940256099942544/2435281174"
+        bannerView.rootViewController = self
+        
+        bannerView.load(GADRequest())
     }
 
+    func addBannerViewToView(_ bannerView: GADBannerView) {
+        bannerView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(bannerView)
+        // バナーを画面の下部に配置
+        NSLayoutConstraint.activate([
+            bannerView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
+            bannerView.centerXAnchor.constraint(equalTo: view.centerXAnchor)
+        ])
+    }
+    
     // 画面の向き
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
         if UIDevice.current.userInterfaceIdiom == .phone {
