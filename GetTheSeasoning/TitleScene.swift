@@ -12,9 +12,6 @@ import GameKit
 class TitleScene: SKScene {
     
     var audioPlayer: AVAudioPlayer?
-    var startButton: SKShapeNode!
-    var howToPlayButton: SKShapeNode!
-    var returnButtonBg: SKShapeNode!
     var title: SKSpriteNode!
     let titleLabel = SKLabelNode(text: "しょうゆ取ってゲーム")
     var howToPlayDialog: SKSpriteNode?
@@ -38,9 +35,7 @@ class TitleScene: SKScene {
     
     override func didMove(to view: SKView) {
         // GameCenter認証
-        print("GameCenter認証START")
         authenticateLocalPlayer()
-        print("GameCenter認証END")
         
         playBackgroundMusic()
         
@@ -54,38 +49,50 @@ class TitleScene: SKScene {
         title.position = CGPoint(x: frame.midX, y: frame.midY)
         title.zPosition = -2
         addChild(title)
-        
-        // スタートボタン
-        let startButtonSize = CGSize(width: 250, height: 90)
-        startButton = SKShapeNode(rectOf: startButtonSize, cornerRadius: 10)
-        startButton.fillColor = SKColor.white
-        startButton.strokeColor = SKColor.black
-        startButton.lineWidth = 1
-        startButton.zPosition = 1
-        startButton.position = CGPoint(x: frame.midX, y: frame.midY - 180)
-        addChild(startButton)
-        let startButtonLabel = SKLabelNode(text: "スタート")
-        startButtonLabel.position = CGPoint(x: frame.midX, y: frame.midY - 200)
-        startButtonLabel.fontSize = 60
-        startButtonLabel.fontColor = SKColor.black
-        startButtonLabel.zPosition = 1
-        addChild(startButtonLabel)
-        
-        // 遊び方ボタン
-        let howToPlayButtonSize = CGSize(width: 250, height: 90)
-        howToPlayButton = SKShapeNode(rectOf: howToPlayButtonSize, cornerRadius: 10)
-        howToPlayButton.fillColor = SKColor.white
-        howToPlayButton.strokeColor = SKColor.black
-        howToPlayButton.lineWidth = 1
-        howToPlayButton.zPosition = 1
-        howToPlayButton.position = CGPoint(x: frame.midX, y: frame.midY - 300)
-        addChild(howToPlayButton)
-        let howToPlayButtonLabel = SKLabelNode(text: "遊び方")
-        howToPlayButtonLabel.position = CGPoint(x: frame.midX, y: frame.midY - 320)
-        howToPlayButtonLabel.fontSize = 60
-        howToPlayButtonLabel.fontColor = SKColor.black
-        howToPlayButtonLabel.zPosition = 1
-        addChild(howToPlayButtonLabel)
+
+        createButton(
+            buttonName: "level1Button"
+            , buttonLabel: "初級"
+            , buttonSize: CGSize(width: 250, height: 90)
+            , buttonPosition: CGPoint(x: frame.midX, y: frame.midY - 60)
+            , buttonLabelPosition: CGPoint(x: frame.midX, y: frame.midY - 80)
+            , fontSize: 60
+        )
+
+        createButton(
+              buttonName: "level2Button"
+            , buttonLabel: "中級"
+            , buttonSize: CGSize(width: 250, height: 90)
+            , buttonPosition: CGPoint(x: frame.midX, y: frame.midY - 180)
+            , buttonLabelPosition: CGPoint(x: frame.midX, y: frame.midY - 200)
+            , fontSize: 60
+        )
+
+        createButton(
+              buttonName: "howToPlayButton"
+            , buttonLabel: "遊び方"
+            , buttonSize: CGSize(width: 250, height: 90)
+            , buttonPosition: CGPoint(x: frame.midX, y: frame.midY - 300)
+            , buttonLabelPosition: CGPoint(x: frame.midX, y: frame.midY - 320)
+            , fontSize: 60
+        )
+    }
+    
+    func createButton (buttonName: String, buttonLabel: String, buttonSize: CGSize, buttonPosition: CGPoint, buttonLabelPosition: CGPoint, fontSize: CGFloat) {
+        let button = SKShapeNode(rectOf: buttonSize, cornerRadius: 10)
+        button.fillColor = SKColor.white
+        button.strokeColor = SKColor.black
+        button.lineWidth = 1
+        button.zPosition = 1
+        button.position = buttonPosition
+        button.name = buttonName
+        addChild(button)
+        let buttonLabel = SKLabelNode(text: buttonLabel)
+        buttonLabel.position = buttonLabelPosition
+        buttonLabel.fontSize = fontSize
+        buttonLabel.fontColor = SKColor.black
+        buttonLabel.zPosition = 1
+        addChild(buttonLabel)
     }
     
     func playBackgroundMusic() {
@@ -119,21 +126,26 @@ class TitleScene: SKScene {
         
         if (!isPaused) {
             // ゲーム画面に遷移
-            if startButton.contains(location) {
-                let gameScene = GameScene(size: self.size)
-                let transition = SKTransition.fade(withDuration: 1.0)
-                self.view?.presentScene(gameScene, transition: transition)
-            }
-            // 遊び方を表示
-            if howToPlayButton.contains(location) {
-                showHowToPlayDialog()
+            let nodesAtPoint = nodes(at: location)
+            for node in nodesAtPoint {
+                if node.name == "level1Button" {
+                    let gameScene = GameScene(size: self.size, level: 1)
+                    let transition = SKTransition.fade(withDuration: 1.0)
+                    self.view?.presentScene(gameScene, transition: transition)
+                } else if node.name == "level2Button" {
+                    let gameScene = GameScene(size: self.size, level: 2)
+                    let transition = SKTransition.fade(withDuration: 1.0)
+                    self.view?.presentScene(gameScene, transition: transition)
+                } else if node.name == "howToPlayButton" {
+                    showHowToPlayDialog()
+                }
             }
         }
         
         // 遊び方サブウインドウの戻るボタン
         if let dialog = howToPlayDialog, dialog.contains(location) {
-            let nodesAtPoint = nodes(at: location)
-            for node in nodesAtPoint {
+            let nodesAtPointSub = nodes(at: location)
+            for node in nodesAtPointSub {
                 if node.name == "returnButton" {
                     closeHowToPlayDialog()
                     break
@@ -159,13 +171,13 @@ class TitleScene: SKScene {
         howToPlayDialogObject.addChild(howToPlayObject)
         
         let buttonSize = CGSize(width: 160, height: 70)
-        returnButtonBg = SKShapeNode(rectOf: buttonSize, cornerRadius: 10)
-        returnButtonBg.fillColor = SKColor.white
-        returnButtonBg.strokeColor = SKColor.black
-        returnButtonBg.lineWidth = 1
-        returnButtonBg.zPosition = 101
-        returnButtonBg.position = CGPoint(x: 0, y: -440)
-        howToPlayDialogObject.addChild(returnButtonBg)
+        let buttonBg = SKShapeNode(rectOf: buttonSize, cornerRadius: 10)
+        buttonBg.fillColor = SKColor.white
+        buttonBg.strokeColor = SKColor.black
+        buttonBg.lineWidth = 1
+        buttonBg.zPosition = 101
+        buttonBg.position = CGPoint(x: 0, y: -440)
+        howToPlayDialogObject.addChild(buttonBg)
         let returnButton = SKLabelNode(text: "戻る")
         returnButton.position = CGPoint(x: 0, y: -460)
         returnButton.zPosition = 101

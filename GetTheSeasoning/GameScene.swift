@@ -11,6 +11,18 @@ import GameKit
 
 class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelegate {
     
+    var level: Int
+    
+    // カスタムイニシャライザ
+    init(size: CGSize, level: Int) {
+        self.level = level
+        super.init(size: size)
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
     var audioPlayer: AVAudioPlayer?
     var effectPlayer: AVAudioPlayer?
     
@@ -104,7 +116,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         _ = createObject(textureName: "desk", size: CGSize(width: 550, height: 600), position: CGPoint(x: frame.midX, y: frame.midY - 50), zPosition: 0)
         
         // 料理（障害物）
-        createCookingObject()
+        if level >= 2 {
+            createCookingObject()
+        }
         
         // お父さん
         _ = createObject(textureName: "father", size: CGSize(width: 400, height: 400), position: CGPoint(x: frame.midX - 150, y: frame.midY - 500), zPosition: 0)
@@ -169,15 +183,49 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
             , "tonnjiru"
             , "udon"
         ]
-        // 生成する範囲
+
+        // 8つの位置を定義
+        let positions: [CGPoint] = [
+            CGPoint(x: frame.minX + 160, y: frame.midY - 35),
+            CGPoint(x: frame.minX + 305, y: frame.midY - 35),
+            CGPoint(x: frame.minX + 450, y: frame.midY - 35),
+            CGPoint(x: frame.minX + 595, y: frame.midY - 35),
+            CGPoint(x: frame.minX + 160, y: frame.midY - 185),
+            CGPoint(x: frame.minX + 305, y: frame.midY - 185),
+            CGPoint(x: frame.minX + 450, y: frame.midY - 185),
+            CGPoint(x: frame.minX + 595, y: frame.midY - 185)
+        ]
         
-        // 料理一覧をループして生成
+        // 8つの中からランダムに表示
+        let randomIndices = Array(0..<8).shuffled().prefix(4)
         for (index, cookingName) in cookingNames.enumerated() {
-            let addXPos = if index < 4 { index * 145 } else { (index - 4) * 145 };
-            let addYPos = if index < 4 { 0 } else { 150 };
-            // 障害物として定義
-            _ = createSKPhysicsBody(textureName: cookingName, size: CGSize(width: 135, height: 110), position: CGPoint(x: frame.minX + CGFloat(160 + addXPos), y: frame.midY - CGFloat(35 + addYPos)), zPosition: 1, category: PhysicsCategory.soySauce)
+            if randomIndices.contains(index) {
+                let position = positions[index]
+                _ = createSKPhysicsBody(
+                    textureName: cookingName,
+                    size: CGSize(width: 135, height: 110),
+                    position: position,
+                    zPosition: 1,
+                    category: PhysicsCategory.soySauce
+                )
+            } else {
+                // 表示しないオブジェクトの配列などに格納したり、必要であれば処理を追加
+                print("位置 \(index) は非表示")
+            }
         }
+        
+//        // 料理一覧の生成
+//        if level >= 2 {
+//            // ランダムに3つ取得
+//            let randomCookingNames = cookingNames.shuffled().prefix(3)
+//
+//            for (index, cookingName) in randomCookingNames.enumerated() {
+//                let addXPos = if index < 4 { index * 145 } else { (index - 4) * 145 };
+//                let addYPos = if index < 4 { 0 } else { 150 };
+//                // 障害物として定義
+//                _ = createSKPhysicsBody(textureName: cookingName, size: CGSize(width: 135, height: 110), position: CGPoint(x: frame.minX + CGFloat(160 + addXPos), y: frame.midY - CGFloat(35 + addYPos)), zPosition: 1, category: PhysicsCategory.soySauce)
+//            }
+//        }
     }
     
     // 衝突判定有りの物体を生成
@@ -187,7 +235,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         spriteNode.position = position
         spriteNode.zPosition = zPosition
         spriteNode.physicsBody = SKPhysicsBody(texture: texture, size: size)
-        spriteNode.physicsBody?.isDynamic = true
+        spriteNode.physicsBody?.isDynamic = false
         spriteNode.physicsBody?.categoryBitMask = PhysicsCategory.cooking
         spriteNode.physicsBody?.contactTestBitMask = category   // 接触したときの通知先
         spriteNode.physicsBody?.collisionBitMask = category    // 指定した物体と衝突判定
