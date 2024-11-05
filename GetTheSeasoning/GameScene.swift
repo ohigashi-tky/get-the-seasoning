@@ -652,14 +652,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
     
     // GameCenterランキングを表示
     func reportScore(totalTime: TimeInterval) {
+        if level < 1 { return }
+        let leaderboardID = "takuya.TakeSoyGame.level\(level)"
+
         // 整数に変換してスコアとして報告 Int型で送るために変換（12.34秒で登録の場合は1234）
         let scoreValue = Int(totalTime * 100)
         if GKLocalPlayer.local.isAuthenticated {
-            GKLeaderboard.submitScore(scoreValue, context: 0, player: GKLocalPlayer.local, leaderboardIDs: ["takuya.TakeSoyGame.leaderboard"]) { error in
+            GKLeaderboard.submitScore(scoreValue, context: 0, player: GKLocalPlayer.local, leaderboardIDs: [leaderboardID]) { error in
                 if let error = error {
                     print("Error reportScore: スコア送信に失敗 \(error.localizedDescription)")
                 } else {
-                    print("OK reportScore: スコア送信に成功 \(scoreValue)")
+                    print("OK reportScore: スコア送信に成功:\(scoreValue) LeaderBoardID:\(leaderboardID)")
                 }
             }
         } else {
@@ -668,17 +671,19 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
     }
     
     func showLeaderboard() {
+        print(level)
+        if level < 1 { return }
+        let leaderboardID = "takuya.TakeSoyGame.level\(level)"
         // リーダーボードIDを指定して GKLeaderboard を初期化
         if GKLocalPlayer.local.isAuthenticated {
-            print("showLeaderboard: リーダーボード表示前")
-            GKLeaderboard.loadLeaderboards(IDs: ["takuya.TakeSoyGame.leaderboard"]) { leaderboards, error in
+            GKLeaderboard.loadLeaderboards(IDs: [leaderboardID]) { leaderboards, error in
                 if let error = error {
                     print("Error showLeaderboard(): \(error.localizedDescription)")
                     return
                 }
                 
                 // リーダーボードを取得してGameCenterのビューコントローラーを表示
-                print("showLeaderboard: リーダーボード表示")
+                print("showLeaderboard: リーダーボード表示 LeaderBoardID:\(leaderboardID)")
                 if let leaderboard = leaderboards?.first {
                     let gcViewController = GKGameCenterViewController(leaderboard: leaderboard, playerScope: .global)
                     gcViewController.gameCenterDelegate = self
