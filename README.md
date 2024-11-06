@@ -5,6 +5,6 @@
 Swift
 
 ## 画面
-![タイトル画面](title_image.PNG)
+![タイトル画面](title_image.png)
 ![ゲーム画面](game_image.PNG)
 ![使い方](howtoplay_image.PNG)
