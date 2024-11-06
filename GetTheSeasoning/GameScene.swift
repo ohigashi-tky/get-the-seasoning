@@ -13,7 +13,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
     
     var level: Int
     
-    // カスタムイニシャライザ
+    // 初期処理
     init(size: CGSize, level: Int) {
         self.level = level
         super.init(size: size)
@@ -34,6 +34,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
     var arm: SKSpriteNode!
     var soysauce: SKSpriteNode!
     var messageImage: SKSpriteNode!
+    var positions: [CGPoint]!
     
     var talker: Int!
     
@@ -72,7 +73,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         static let arm: UInt32 = 0x1 << 0 // 腕のカテゴリ
         static let soySauce: UInt32 = 0x1 << 1 // 醤油のカテゴリ
         static let wall: UInt32 = 0x1 << 2 // 壁のカテゴリ
-        static let cooking: UInt32 = 0x1 << 2
+        static let cooking: UInt32 = 0x1 << 3
     }
     
     // 定数
@@ -114,8 +115,19 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         
         // 机
         _ = createObject(textureName: "desk", size: CGSize(width: 550, height: 600), position: CGPoint(x: frame.midX, y: frame.midY - 50), zPosition: 0)
-        
-        // 料理（障害物）
+
+        // 料理の座標を設定
+        positions = [
+            CGPoint(x: frame.minX + 160, y: frame.midY - 35),
+            CGPoint(x: frame.minX + 305, y: frame.midY - 35),
+            CGPoint(x: frame.minX + 450, y: frame.midY - 35),
+            CGPoint(x: frame.minX + 595, y: frame.midY - 35),
+            CGPoint(x: frame.minX + 160, y: frame.midY - 185),
+            CGPoint(x: frame.minX + 305, y: frame.midY - 185),
+            CGPoint(x: frame.minX + 450, y: frame.midY - 185),
+            CGPoint(x: frame.minX + 595, y: frame.midY - 185)
+        ]
+        // 料理
         if level >= 2 {
             createCookingObject()
         }
@@ -157,10 +169,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         arm.physicsBody?.isDynamic = true
 //        arm.physicsBody?.allowsRotation = false // 回転しない 動作が若干不安定になる
         arm.physicsBody?.categoryBitMask = PhysicsCategory.arm
-//        arm.physicsBody?.contactTestBitMask = PhysicsCategory.soySauce | PhysicsCategory.wall
-//        arm.physicsBody?.collisionBitMask = PhysicsCategory.soySauce | PhysicsCategory.wall
         arm.physicsBody?.contactTestBitMask = 0
-        arm.physicsBody?.collisionBitMask = 0
+        arm.physicsBody?.collisionBitMask = PhysicsCategory.wall
         arm.physicsBody?.restitution = 0.0 // 衝突時の反発
         arm.physicsBody?.friction = 0.0 // 摩擦
         addChild(arm)
@@ -173,33 +183,20 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
     
     // 机の上の料理を生成（ランダム）
     func createCookingObject() {
+        // 既存の料理を削除
+        removeExistingNode(name: "cooking")
+        
         let cookingNames: [String] = [
-              "pasuta_meat"
-            , "medamayaki"
-            , "sanma"
-            , "korokke"
-            , "syougayaki"
-            , "rice"
-            , "tonnjiru"
-            , "udon"
+            "pasuta_meat", "medamayaki", "sanma", "korokke",
+            "syougayaki", "rice", "tonnjiru", "udon"
         ]
 
-        // 8つの位置を定義
-        let positions: [CGPoint] = [
-            CGPoint(x: frame.minX + 160, y: frame.midY - 35),
-            CGPoint(x: frame.minX + 305, y: frame.midY - 35),
-            CGPoint(x: frame.minX + 450, y: frame.midY - 35),
-            CGPoint(x: frame.minX + 595, y: frame.midY - 35),
-            CGPoint(x: frame.minX + 160, y: frame.midY - 185),
-            CGPoint(x: frame.minX + 305, y: frame.midY - 185),
-            CGPoint(x: frame.minX + 450, y: frame.midY - 185),
-            CGPoint(x: frame.minX + 595, y: frame.midY - 185)
-        ]
-        
-        // 8つの中からランダムに表示
-        let randomIndices = Array(0..<8).shuffled().prefix(4)
+        // 8つの中からランダムに表示 横一列の最大個数は3つ（醤油が取れるように）
+        let firstRange = Array(0...3).shuffled().prefix(Int.random(in: 1...3))
+        let secondRange = Array(4...7).shuffled().prefix(4 - firstRange.count)
+        let randomIndexs = Array(firstRange + secondRange).shuffled()
         for (index, cookingName) in cookingNames.enumerated() {
-            if randomIndices.contains(index) {
+            if randomIndexs.contains(index) {
                 let position = positions[index]
                 _ = createSKPhysicsBody(
                     textureName: cookingName,
@@ -208,24 +205,18 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
                     zPosition: 1,
                     category: PhysicsCategory.soySauce
                 )
-            } else {
-                // 表示しないオブジェクトの配列などに格納したり、必要であれば処理を追加
-                print("位置 \(index) は非表示")
             }
         }
-        
-//        // 料理一覧の生成
-//        if level >= 2 {
-//            // ランダムに3つ取得
-//            let randomCookingNames = cookingNames.shuffled().prefix(3)
-//
-//            for (index, cookingName) in randomCookingNames.enumerated() {
-//                let addXPos = if index < 4 { index * 145 } else { (index - 4) * 145 };
-//                let addYPos = if index < 4 { 0 } else { 150 };
-//                // 障害物として定義
-//                _ = createSKPhysicsBody(textureName: cookingName, size: CGSize(width: 135, height: 110), position: CGPoint(x: frame.minX + CGFloat(160 + addXPos), y: frame.midY - CGFloat(35 + addYPos)), zPosition: 1, category: PhysicsCategory.soySauce)
-//            }
-//        }
+    }
+    
+    // 指定した名称のノードを削除
+    func removeExistingNode(name: String) {
+        if name == "" { return }
+        for node in children {
+            if node.name == name {
+                node.removeFromParent()
+            }
+        }
     }
     
     // 衝突判定有りの物体を生成
@@ -234,6 +225,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         let spriteNode = SKSpriteNode(texture: texture, size: size)
         spriteNode.position = position
         spriteNode.zPosition = zPosition
+        spriteNode.name = "cooking" //一旦、全てを料理に固定
         spriteNode.physicsBody = SKPhysicsBody(texture: texture, size: size)
         spriteNode.physicsBody?.isDynamic = false
         spriteNode.physicsBody?.categoryBitMask = PhysicsCategory.cooking
@@ -422,6 +414,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         // ダイアログを削除
         resultDialog?.removeFromParent()
         resultDialog = nil
+
+        // 料理の再配置
+        if level >= 2 {
+            createCookingObject()
+        }
         
         // ゲームの挙動を再開
         isPaused = false
@@ -525,6 +522,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
             soyNode.removeFromParent()
             self.spawnSoysauce()
         }
+        // 料理の再配置
+        if level >= 2 {
+            createCookingObject()
+        }
     }
     
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -564,9 +565,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
     }
     
     func createInvisibleWall() {
-        let wallHeight: CGFloat = frame.height / 3
+        let wallHeight: CGFloat = frame.height / 2.5
         let wall = SKSpriteNode(color: .clear, size: CGSize(width: frame.width, height: wallHeight))
-        wall.position = CGPoint(x: frame.midX, y: frame.maxY - wallHeight / 3.2) // 壁の位置を設定
+        wall.position = CGPoint(x: frame.midX, y: frame.maxY)
         
         // 壁に物理ボディを追加
         wall.physicsBody = SKPhysicsBody(rectangleOf: wall.size)
@@ -632,7 +633,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         resetArmPosition()
         isHoldingSoy = false
         isArmMoveRestriction = true
-
+        // 料理の再配置
+        if level >= 2 {
+            createCookingObject()
+        }
+        
         stopTimer()
         
         // 1ゲームごとに結果を表示
@@ -671,7 +676,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
     }
     
     func showLeaderboard() {
-        print(level)
         if level < 1 { return }
         let leaderboardID = "takuya.TakeSoyGame.level\(level)"
         // リーダーボードIDを指定して GKLeaderboard を初期化
