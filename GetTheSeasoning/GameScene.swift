@@ -106,10 +106,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
     func setupGame() {
         // 上部の透明な壁
         createInvisibleWall()
-
-        // 床
-        _ = createObject(textureName: "flooring", size: CGSize(width: 750, height: 1334), position: CGPoint(x: frame.midX, y: frame.midY), zPosition: -2)
         
+        // 床
+        if level <= 1 {
+            _ = createObject(textureName: "flooring", size: CGSize(width: 750, height: 1334), position: CGPoint(x: frame.midX, y: frame.midY), zPosition: -2)
+        } else if level == 2 {
+            _ = createObject(textureName: "flooring", size: CGSize(width: 750, height: 1334), position: CGPoint(x: frame.midX, y: frame.midY), zPosition: -2)
+        } else if level == 3 {
+            _ = createObject(textureName: "flooring", size: CGSize(width: 750, height: 1334), position: CGPoint(x: frame.midX, y: frame.midY), zPosition: -2)
+        }
+            
         // モニター
         _ = createObject(textureName: "monitor", size: CGSize(width: 570, height: 650), position: CGPoint(x: frame.midX, y: frame.maxY - 280), zPosition: -1)
         
