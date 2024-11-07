@@ -111,16 +111,22 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         if level <= 1 {
             _ = createObject(textureName: "flooring", size: CGSize(width: 750, height: 1334), position: CGPoint(x: frame.midX, y: frame.midY), zPosition: -2)
         } else if level == 2 {
-            _ = createObject(textureName: "flooring", size: CGSize(width: 750, height: 1334), position: CGPoint(x: frame.midX, y: frame.midY), zPosition: -2)
+            _ = createObject(textureName: "floor_gray", size: CGSize(width: 750, height: 1334), position: CGPoint(x: frame.midX, y: frame.midY), zPosition: -2)
         } else if level == 3 {
-            _ = createObject(textureName: "flooring", size: CGSize(width: 750, height: 1334), position: CGPoint(x: frame.midX, y: frame.midY), zPosition: -2)
+            _ = createObject(textureName: "floor_mix", size: CGSize(width: 750, height: 1334), position: CGPoint(x: frame.midX, y: frame.midY), zPosition: -2)
         }
             
         // モニター
         _ = createObject(textureName: "monitor", size: CGSize(width: 570, height: 650), position: CGPoint(x: frame.midX, y: frame.maxY - 280), zPosition: -1)
         
         // 机
-        _ = createObject(textureName: "desk", size: CGSize(width: 550, height: 600), position: CGPoint(x: frame.midX, y: frame.midY - 50), zPosition: 0)
+        if level <= 1 {
+            _ = createObject(textureName: "desk", size: CGSize(width: 550, height: 600), position: CGPoint(x: frame.midX, y: frame.midY - 50), zPosition: 0)
+        } else if level == 2 {
+            _ = createObject(textureName: "desk_black", size: CGSize(width: 550, height: 600), position: CGPoint(x: frame.midX, y: frame.midY - 50), zPosition: 0)
+        } else if level == 3 {
+            _ = createObject(textureName: "desk_4mix2", size: CGSize(width: 550, height: 600), position: CGPoint(x: frame.midX, y: frame.midY - 50), zPosition: 0)
+        }
 
         // 料理の座標を設定
         positions = [
