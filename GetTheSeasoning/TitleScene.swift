@@ -54,8 +54,8 @@ class TitleScene: SKScene {
             buttonName: "level1Button"
             , buttonLabel: "初級"
             , buttonSize: CGSize(width: 250, height: 90)
-            , buttonPosition: CGPoint(x: frame.midX, y: frame.midY - 60)
-            , buttonLabelPosition: CGPoint(x: frame.midX, y: frame.midY - 80)
+            , buttonPosition: CGPoint(x: frame.midX, y: frame.midY + 20)
+            , buttonLabelPosition: CGPoint(x: frame.midX, y: frame.midY)
             , fontSize: 60
         )
 
@@ -63,8 +63,17 @@ class TitleScene: SKScene {
               buttonName: "level2Button"
             , buttonLabel: "中級"
             , buttonSize: CGSize(width: 250, height: 90)
-            , buttonPosition: CGPoint(x: frame.midX, y: frame.midY - 180)
-            , buttonLabelPosition: CGPoint(x: frame.midX, y: frame.midY - 200)
+            , buttonPosition: CGPoint(x: frame.midX, y: frame.midY - 100)
+            , buttonLabelPosition: CGPoint(x: frame.midX, y: frame.midY - 120)
+            , fontSize: 60
+        )
+        
+        createButton(
+            buttonName: "level3Button"
+            , buttonLabel: "上級"
+            , buttonSize: CGSize(width: 250, height: 90)
+            , buttonPosition: CGPoint(x: frame.midX, y: frame.midY - 220)
+            , buttonLabelPosition: CGPoint(x: frame.midX, y: frame.midY - 240)
             , fontSize: 60
         )
 
@@ -72,8 +81,8 @@ class TitleScene: SKScene {
               buttonName: "howToPlayButton"
             , buttonLabel: "遊び方"
             , buttonSize: CGSize(width: 250, height: 90)
-            , buttonPosition: CGPoint(x: frame.midX, y: frame.midY - 300)
-            , buttonLabelPosition: CGPoint(x: frame.midX, y: frame.midY - 320)
+            , buttonPosition: CGPoint(x: frame.midX, y: frame.midY - 380)
+            , buttonLabelPosition: CGPoint(x: frame.midX, y: frame.midY - 400)
             , fontSize: 60
         )
     }
@@ -134,6 +143,10 @@ class TitleScene: SKScene {
                     self.view?.presentScene(gameScene, transition: transition)
                 } else if node.name == "level2Button" {
                     let gameScene = GameScene(size: self.size, level: 2)
+                    let transition = SKTransition.fade(withDuration: 1.0)
+                    self.view?.presentScene(gameScene, transition: transition)
+                } else if node.name == "level3Button" {
+                    let gameScene = GameScene(size: self.size, level: 3)
                     let transition = SKTransition.fade(withDuration: 1.0)
                     self.view?.presentScene(gameScene, transition: transition)
                 } else if node.name == "howToPlayButton" {

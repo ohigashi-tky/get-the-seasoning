@@ -35,7 +35,7 @@ class GameViewController: UIViewController, GADBannerViewDelegate {
         
         addBannerViewToView(bannerView)
         
-//        bannerView.adUnitID = "ca-app-pub-3940256099942544/2435281174"
+//        bannerView.adUnitID = "ca-app-pub-3940256099942544/2435281174"    // デモ用広告
         bannerView.adUnitID = "ca-app-pub-2702984873601788/7790379231"
         bannerView.rootViewController = self
         

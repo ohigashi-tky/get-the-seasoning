@@ -118,17 +118,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
 
         // 料理の座標を設定
         positions = [
-            CGPoint(x: frame.minX + 160, y: frame.midY - 35),
-            CGPoint(x: frame.minX + 305, y: frame.midY - 35),
-            CGPoint(x: frame.minX + 450, y: frame.midY - 35),
-            CGPoint(x: frame.minX + 595, y: frame.midY - 35),
+            CGPoint(x: frame.minX + 160, y: frame.midY - 15),
+            CGPoint(x: frame.minX + 305, y: frame.midY - 15),
+            CGPoint(x: frame.minX + 450, y: frame.midY - 15),
+            CGPoint(x: frame.minX + 595, y: frame.midY - 15),
             CGPoint(x: frame.minX + 160, y: frame.midY - 185),
             CGPoint(x: frame.minX + 305, y: frame.midY - 185),
             CGPoint(x: frame.minX + 450, y: frame.midY - 185),
             CGPoint(x: frame.minX + 595, y: frame.midY - 185)
         ]
         // 料理
-        if level >= 2 {
+        if level > 0 {
             createCookingObject()
         }
         
@@ -167,7 +167,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         // 腕に物理ボディを追加
         arm.physicsBody = SKPhysicsBody(texture: armTexture, size: arm.size)
         arm.physicsBody?.isDynamic = true
-//        arm.physicsBody?.allowsRotation = false // 回転しない 動作が若干不安定になる
         arm.physicsBody?.categoryBitMask = PhysicsCategory.arm
         arm.physicsBody?.contactTestBitMask = 0
         arm.physicsBody?.collisionBitMask = PhysicsCategory.wall
@@ -175,7 +174,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         arm.physicsBody?.friction = 0.0 // 摩擦
         addChild(arm)
         
-        // 醤油を表示(初回)
+        // 醤油を表示
         spawnSoysauce()
         // 指示
         startMessageTimer()
@@ -192,11 +191,22 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         ]
 
         // 8つの中からランダムに表示 横一列の最大個数は3つ（醤油が取れるように）
-        let firstRange = Array(0...3).shuffled().prefix(Int.random(in: 1...3))
-        let secondRange = Array(4...7).shuffled().prefix(4 - firstRange.count)
-        let randomIndexs = Array(firstRange + secondRange).shuffled()
+        var firstRange: ArraySlice<Int>
+        var secondRange: ArraySlice<Int>
+        var indexs: [Int] = [0]
+        if level == 1 {
+            indexs = [5,6]
+        } else if level == 2 {
+            firstRange = Array(0...3).shuffled().prefix(Int.random(in: 1...3))
+            secondRange = Array(4...7).shuffled().prefix(4 - firstRange.count)
+            indexs = Array(firstRange + secondRange).shuffled()
+        } else if level == 3 {
+            firstRange = Array(0...3).shuffled().prefix(Int.random(in: 2...3))
+            secondRange = Array(4...7).shuffled().prefix(5 - firstRange.count)
+            indexs = Array(firstRange + secondRange).shuffled()
+        }
         for (index, cookingName) in cookingNames.enumerated() {
-            if randomIndexs.contains(index) {
+            if indexs.contains(index) {
                 let position = positions[index]
                 _ = createSKPhysicsBody(
                     textureName: cookingName,
@@ -283,7 +293,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
     func spawnSoysauce() {
         let soysauceTexture = SKTexture(imageNamed: "soysauce")
         soysauce = SKSpriteNode(texture: soysauceTexture, size: CGSize(width: 150, height: 180))
-        soysauce.position = CGPoint(x: frame.midX, y: frame.midY + 160)
+        if level >= 3 {
+            // 左右移動のために端に配置
+            soysauce.position = CGPoint(x: frame.midX + 200, y: frame.midY + 160)
+        } else {
+            // 真ん中に配置
+            soysauce.position = CGPoint(x: frame.midX, y: frame.midY + 160)
+        }
         soysauce.zPosition = 1
         
         // 醤油に物理ボディを追加
@@ -295,6 +311,24 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         // 指定した物体と接触で衝突判定
         soysauce.physicsBody?.collisionBitMask = PhysicsCategory.arm | PhysicsCategory.cooking
         soysauce.name = "soysauce"
+        
+        // 左右に移動させる
+        if level >= 3 {
+            let moveLeft = SKAction.moveBy(x: -400, y: 0, duration: 1.0)
+            let moveRight = SKAction.moveBy(x: 400, y: 0, duration: 1.0)
+            let horizontalSequence = SKAction.sequence([moveLeft, moveRight])
+            let repeatHorizontal = SKAction.repeatForever(horizontalSequence)
+            
+            // 上下に移動させるアクション
+            let moveUp = SKAction.moveBy(x: 0, y: 50, duration: 0.3)
+            let moveDown = SKAction.moveBy(x: 0, y: -50, duration: 0.3)
+            let verticalSequence = SKAction.sequence([moveUp, moveDown])
+            let repeatVertical = SKAction.repeatForever(verticalSequence)
+            
+            // 左右と上下のアクションを同時に実行
+            let combinedAction = SKAction.group([repeatHorizontal, repeatVertical])
+            soysauce.run(combinedAction, withKey: "moveSoysauce")
+        }
         addChild(soysauce)
     }
     
@@ -453,6 +487,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         let isContact = (bodyA.categoryBitMask == PhysicsCategory.arm && bodyB.categoryBitMask ==           PhysicsCategory.soySauce) || (bodyA.categoryBitMask == PhysicsCategory.soySauce && bodyB.categoryBitMask == PhysicsCategory.arm)
         if isContact {
             if let soyNode = bodyB.categoryBitMask == PhysicsCategory.soySauce ? bodyB.node : bodyA.node {
+                // 醤油の動きを停止
+                soyNode.removeAction(forKey: "moveSoysauce")
                 // 手に醤油を固定する
                 let handPosition = CGPoint(x: arm.position.x, y: arm.position.y + (arm.size.height / 2))
                 let joint = SKPhysicsJointFixed.joint(withBodyA: arm.physicsBody!, bodyB: soyNode.physicsBody!, anchor: handPosition)
@@ -658,9 +694,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
     // GameCenterランキングを表示
     func reportScore(totalTime: TimeInterval) {
         if level < 1 { return }
-        let leaderboardID = "takuya.TakeSoyGame.level\(level)"
 
         // 整数に変換してスコアとして報告 Int型で送るために変換（12.34秒で登録の場合は1234）
+        let leaderboardID = "takuya.TakeSoyGame.level\(level)"
         let scoreValue = Int(totalTime * 100)
         if GKLocalPlayer.local.isAuthenticated {
             GKLeaderboard.submitScore(scoreValue, context: 0, player: GKLocalPlayer.local, leaderboardIDs: [leaderboardID]) { error in
@@ -677,8 +713,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
     
     func showLeaderboard() {
         if level < 1 { return }
-        let leaderboardID = "takuya.TakeSoyGame.level\(level)"
+
         // リーダーボードIDを指定して GKLeaderboard を初期化
+        let leaderboardID = "takuya.TakeSoyGame.level\(level)"
         if GKLocalPlayer.local.isAuthenticated {
             GKLeaderboard.loadLeaderboards(IDs: [leaderboardID]) { leaderboards, error in
                 if let error = error {
