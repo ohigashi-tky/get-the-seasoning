@@ -130,14 +130,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
 
         // 料理の座標を設定
         positions = [
-            CGPoint(x: frame.minX + 160, y: frame.midY - 15),
-            CGPoint(x: frame.minX + 305, y: frame.midY - 15),
-            CGPoint(x: frame.minX + 450, y: frame.midY - 15),
-            CGPoint(x: frame.minX + 595, y: frame.midY - 15),
-            CGPoint(x: frame.minX + 160, y: frame.midY - 185),
-            CGPoint(x: frame.minX + 305, y: frame.midY - 185),
-            CGPoint(x: frame.minX + 450, y: frame.midY - 185),
-            CGPoint(x: frame.minX + 595, y: frame.midY - 185)
+            CGPoint(x: frame.minX + 160, y: frame.midY - 10),
+            CGPoint(x: frame.minX + 305, y: frame.midY - 10),
+            CGPoint(x: frame.minX + 450, y: frame.midY - 10),
+            CGPoint(x: frame.minX + 595, y: frame.midY - 10),
+            CGPoint(x: frame.minX + 160, y: frame.midY - 190),
+            CGPoint(x: frame.minX + 305, y: frame.midY - 190),
+            CGPoint(x: frame.minX + 450, y: frame.midY - 190),
+            CGPoint(x: frame.minX + 595, y: frame.midY - 190)
         ]
         // 料理
         if level > 0 {
