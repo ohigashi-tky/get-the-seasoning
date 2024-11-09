@@ -12,6 +12,7 @@ import GameKit
 class TitleScene: SKScene {
     
     var audioPlayer: AVAudioPlayer?
+    var effectPlayer: AVAudioPlayer?
     var title: SKSpriteNode!
     let titleLabel = SKLabelNode(text: "しょうゆ取ってゲーム")
     var howToPlayDialog: SKSpriteNode?
@@ -63,8 +64,8 @@ class TitleScene: SKScene {
               buttonName: "level2Button"
             , buttonLabel: "中級"
             , buttonSize: CGSize(width: 250, height: 90)
-            , buttonPosition: CGPoint(x: frame.midX, y: frame.midY - 100)
-            , buttonLabelPosition: CGPoint(x: frame.midX, y: frame.midY - 120)
+            , buttonPosition: CGPoint(x: frame.midX, y: frame.midY - 90)
+            , buttonLabelPosition: CGPoint(x: frame.midX, y: frame.midY - 110)
             , fontSize: 60
         )
         
@@ -72,8 +73,8 @@ class TitleScene: SKScene {
             buttonName: "level3Button"
             , buttonLabel: "上級"
             , buttonSize: CGSize(width: 250, height: 90)
-            , buttonPosition: CGPoint(x: frame.midX, y: frame.midY - 220)
-            , buttonLabelPosition: CGPoint(x: frame.midX, y: frame.midY - 240)
+            , buttonPosition: CGPoint(x: frame.midX, y: frame.midY - 200)
+            , buttonLabelPosition: CGPoint(x: frame.midX, y: frame.midY - 220)
             , fontSize: 60
         )
 
@@ -81,9 +82,18 @@ class TitleScene: SKScene {
               buttonName: "howToPlayButton"
             , buttonLabel: "遊び方"
             , buttonSize: CGSize(width: 250, height: 90)
-            , buttonPosition: CGPoint(x: frame.midX, y: frame.midY - 380)
-            , buttonLabelPosition: CGPoint(x: frame.midX, y: frame.midY - 400)
+            , buttonPosition: CGPoint(x: frame.midX, y: frame.midY - 360)
+            , buttonLabelPosition: CGPoint(x: frame.midX, y: frame.midY - 380)
             , fontSize: 60
+        )
+        
+        // クレジット
+        createLabel(
+              text: "COEIROINK:リリンちゃん"
+            , fontSize: 20
+            , fontColor: SKColor.white
+            , position: CGPoint(x: frame.midX + 180, y: frame.midY - 500)
+            , zPosition: 1
         )
     }
     
@@ -102,6 +112,16 @@ class TitleScene: SKScene {
         buttonLabel.fontColor = SKColor.black
         buttonLabel.zPosition = 1
         addChild(buttonLabel)
+    }
+    
+    func createLabel(text: String, fontSize: CGFloat, fontColor: SKColor, position: CGPoint, zPosition: CGFloat) {
+        let label = SKLabelNode(text: text)
+//        label.fontName = "HiraMinProN-W6"
+        label.fontSize  = fontSize
+        label.fontColor = fontColor
+        label.position  = position
+        label.zPosition = zPosition
+        addChild(label)
     }
     
     func playBackgroundMusic() {
@@ -138,18 +158,22 @@ class TitleScene: SKScene {
             let nodesAtPoint = nodes(at: location)
             for node in nodesAtPoint {
                 if node.name == "level1Button" {
+                    playEffectSound(name: "リリンちゃん_ざあこざあこ", extension_name: "wav")
                     let gameScene = GameScene(size: self.size, level: 1)
                     let transition = SKTransition.fade(withDuration: 1.0)
                     self.view?.presentScene(gameScene, transition: transition)
                 } else if node.name == "level2Button" {
+                    playEffectSound(name: "リリンちゃん_があんばれっ", extension_name: "wav")
                     let gameScene = GameScene(size: self.size, level: 2)
                     let transition = SKTransition.fade(withDuration: 1.0)
                     self.view?.presentScene(gameScene, transition: transition)
                 } else if node.name == "level3Button" {
+                    playEffectSound(name: "リリンちゃん_やれるのお？", extension_name: "wav")
                     let gameScene = GameScene(size: self.size, level: 3)
                     let transition = SKTransition.fade(withDuration: 1.0)
                     self.view?.presentScene(gameScene, transition: transition)
                 } else if node.name == "howToPlayButton" {
+                    playEffectSound(name: "リリンちゃん_ちゃんと見なさいよ", extension_name: "wav")
                     showHowToPlayDialog()
                 }
             }
@@ -219,5 +243,21 @@ class TitleScene: SKScene {
         spriteNode.zPosition = zPosition
         if isAddChild { addChild(spriteNode) }
         return spriteNode
+    }
+    
+    // 効果音を再生する
+    func playEffectSound(name: String, extension_name: String) {
+        guard let url = Bundle.main.url(forResource: name, withExtension: extension_name) else {
+            print("効果音ファイルが見つかりません: \(name)")
+            return
+        }
+        
+        do {
+            effectPlayer = try AVAudioPlayer(contentsOf: url)
+            effectPlayer?.volume = 0.3
+            effectPlayer?.play()
+        } catch {
+            print("効果音の再生に失敗しました: \(name) \(error.localizedDescription)")
+        }
     }
 }

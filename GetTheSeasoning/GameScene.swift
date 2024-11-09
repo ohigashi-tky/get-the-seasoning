@@ -631,8 +631,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
             soyNode.removeFromParent()
         }
 
-        // 効果音
-        playEffectSound()
+//        // 効果音
+//        playEffectSound(name: "effect_take_soy", extension_name: "mp3")
 
         // メッセージ吹き出しを削除
         messageImage?.removeFromParent()
@@ -650,14 +650,18 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
             self.messageImage.zPosition = 1
             self.addChild(messageImage)
         }
-        if elapsedTime < 0.5 {
-            showMessage("はやっ！")
-        } else if elapsedTime < 1 {
-            showMessage("早いねー")
+        if elapsedTime < 1 {
+            playEffectSound(name: "リリンちゃん_はやすぎでしょ", extension_name: "wav")
+            showMessage("はやすぎでしょ")
+        } else if elapsedTime < 1.5 {
+            playEffectSound(name: "リリンちゃん_やるね", extension_name: "wav")
+            showMessage("やるね")
         } else if elapsedTime > 3 {
-            showMessage("遅いッ！")
+            playEffectSound(name: "リリンちゃん_おそいよ", extension_name: "wav")
+            showMessage("おそいよ")
         } else {
-            showMessage("ありがとね")
+            playEffectSound(name: "リリンちゃん_ありがとう", extension_name: "wav")
+            showMessage("ありがとう")
         }
         // メッセージを削除
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
@@ -756,18 +760,18 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
     }
     
     // 効果音を再生する
-    func playEffectSound() {
-        guard let url = Bundle.main.url(forResource: "effect_take_soy", withExtension: "mp3") else {
-            print("効果音ファイルが見つかりません:effect_take_soy")
+    func playEffectSound(name: String, extension_name: String) {
+        guard let url = Bundle.main.url(forResource: name, withExtension: extension_name) else {
+            print("効果音ファイルが見つかりません: \(name)")
             return
         }
         
         do {
             effectPlayer = try AVAudioPlayer(contentsOf: url)
-            effectPlayer?.volume = 0.1
+            effectPlayer?.volume = 0.2
             effectPlayer?.play()
         } catch {
-            print("効果音の再生に失敗しました:effect_take_soy \(error.localizedDescription)")
+            print("効果音の再生に失敗しました: \(name) \(error.localizedDescription)")
         }
     }
     
