@@ -5,7 +5,7 @@
 Swift
 
 ## ボイス
-[COEIROINK:リリンちゃん](https://coeiroink.com/character/audio-character/ririn-h)
+[COEIROINK:リリンちゃん AI声優-銀芽 AI声優-金苗](https://coeiroink.com/)
 
 ## 画面
 ![タイトル画面](title_image.png)

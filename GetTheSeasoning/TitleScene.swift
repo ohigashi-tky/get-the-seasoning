@@ -89,10 +89,10 @@ class TitleScene: SKScene {
         
         // クレジット
         createLabel(
-              text: "COEIROINK:リリンちゃん"
+            text: "COEIROINK:リリンちゃん、AI声優-銀芽、AI声優-金苗"
             , fontSize: 20
             , fontColor: SKColor.white
-            , position: CGPoint(x: frame.midX + 180, y: frame.midY - 500)
+            , position: CGPoint(x: frame.midX - 70, y: frame.midY - 500)
             , zPosition: 1
         )
     }

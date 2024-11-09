@@ -29,8 +29,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
     var flooring: SKSpriteNode!
     var monitor: SKSpriteNode!
     var desk: SKSpriteNode!
-    var mother: SKSpriteNode!
-    var father: SKSpriteNode!
     var arm: SKSpriteNode!
     var soysauce: SKSpriteNode!
     var messageImage: SKSpriteNode!
@@ -144,11 +142,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
             createCookingObject()
         }
         
-        // お父さん
+        // 男性
         _ = createObject(textureName: "father", size: CGSize(width: 400, height: 400), position: CGPoint(x: frame.midX - 150, y: frame.midY - 500), zPosition: 0)
         
-        // お母さん
-        _ = createObject(textureName: "mother", size: CGSize(width: 400, height: 400), position: CGPoint(x: frame.midX + 150, y: frame.midY - 500), zPosition: 0)
+        // 女性
+//        _ = createObject(textureName: "mother", size: CGSize(width: 400, height: 400), position: CGPoint(x: frame.midX + 150, y: frame.midY - 500), zPosition: 0)
+        _ = createObject(textureName: "female", size: CGSize(width: 300, height: 300), position: CGPoint(x: frame.midX + 150, y: frame.midY - 550), zPosition: 0)
         
         // タイム計測
         timerLabel = SKLabelNode(text: "タイム: 0秒")
@@ -350,10 +349,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         
         let messageLabel = SKLabelNode(text: message)
         if talker == 0 {
-            // father
+            // 男性
             messageLabel.position = CGPoint(x: frame.midX + addPosition.messageLabelLeft.x, y: frame.midY + addPosition.messageLabelLeft.y)
         } else {
-            // mother
+            // 女性
             messageLabel.position = CGPoint(x: frame.midX + addPosition.messageLabelRight.x, y: frame.midY + addPosition.messageLabelRight.y)
         }
         messageLabel.fontSize = 40
@@ -368,6 +367,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         // 指示中でないなら指示を行う
         guard !isIndicatingFlag else { return }
 
+        var character_name: String = ""
+        
         let interval = Double.random(in: 7.0...10.0);
         messageTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
             if self?.isPaused == true || self?.isIndicatingFlag == true { return }
@@ -378,16 +379,19 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
             let messageHardTexture = SKTexture(imageNamed: "message_hard")
             messageImage = SKSpriteNode(texture: messageHardTexture, size: CGSize(width: 370, height: 110))
             if talker == 0 {
-                // father
+                // 男性
+                character_name = "銀芽"
                 messageImage.position = CGPoint(x: frame.midX + addPosition.messageBgLeft.x, y: frame.midY + addPosition.messageBgLeft.y)
             } else {
-                // mother
+                // 女性
+                character_name = "リリンちゃん"
                 messageImage.position = CGPoint(x: frame.midX + addPosition.messageBgRight.x, y: frame.midY + addPosition.messageBgRight.y)
             }
             if let messageImage = self.messageImage {
                 self.messageImage.zPosition = 1
                 self.addChild(messageImage)
             }
+            playEffectSound(name: "\(character_name)_しょうゆとって", extension_name: "wav")
             self.showMessage("醤油取って！")
             self.startTimer()
             isArmMoveRestriction = false
@@ -596,10 +600,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
             
             var isReachArea = false
             if talker == 0 {
-                // father
+                // 男性
                 isReachArea = soyNodePosition.x < frame.midX
             } else {
-                // mother
+                // 女性
                 isReachArea = soyNodePosition.x > frame.midX
             }
             
@@ -627,12 +631,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
     }
     
     func removeSoysauce() {
+        var character_name: String = ""
+        let voice_list = [
+             "mesugaki": ["はやすぎでしょ", "やるね", "おそいよ", "ありがとう"]
+            ,"father": ["はやいね", "やるね", "おそいな", "ありがとう"]
+            ,"mother": ["はやはやいでしょ", "やるね", "おそいな", "ありがとう"]
+        ]
+        var voices: [String] = []
+        
         if let soyNode = self.childNode(withName: "soysauce") {
             soyNode.removeFromParent()
         }
-
-//        // 効果音
-//        playEffectSound(name: "effect_take_soy", extension_name: "mp3")
 
         // メッセージ吹き出しを削除
         messageImage?.removeFromParent()
@@ -640,10 +649,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         let messageSoftTexture = SKTexture(imageNamed: "message_soft")
         messageImage = SKSpriteNode(texture: messageSoftTexture, size: CGSize(width: 330, height: 110))
         if talker == 0 {
-            // father
+            // 男性
+            character_name = "銀芽"
+            voices = voice_list["father"]!
             messageImage.position = CGPoint(x: frame.midX + addPosition.messageLabelLeft.x, y: frame.midY + addPosition.messageLabelLeft.y)
         } else {
-            // mother
+            // 女性
+            character_name = "リリンちゃん"
+            voices = voice_list["mesugaki"]!
             messageImage.position = CGPoint(x: frame.midX + addPosition.messageLabelRight.x, y: frame.midY + addPosition.messageLabelRight.y)
         }
         if let messageImage = self.messageImage {
@@ -651,17 +664,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
             self.addChild(messageImage)
         }
         if elapsedTime < 1 {
-            playEffectSound(name: "リリンちゃん_はやすぎでしょ", extension_name: "wav")
-            showMessage("はやすぎでしょ")
+            playEffectSound(name: "\(character_name)_\(voices[0])", extension_name: "wav")
+            showMessage(voices[0])
         } else if elapsedTime < 1.5 {
-            playEffectSound(name: "リリンちゃん_やるね", extension_name: "wav")
-            showMessage("やるね")
+            playEffectSound(name: "\(character_name)_\(voices[1])", extension_name: "wav")
+            showMessage(voices[1])
         } else if elapsedTime > 3 {
-            playEffectSound(name: "リリンちゃん_おそいよ", extension_name: "wav")
-            showMessage("おそいよ")
+            playEffectSound(name: "\(character_name)_\(voices[2])", extension_name: "wav")
+            showMessage(voices[2])
         } else {
-            playEffectSound(name: "リリンちゃん_ありがとう", extension_name: "wav")
-            showMessage("ありがとう")
+            playEffectSound(name: "\(character_name)_\(voices[3])", extension_name: "wav")
+            showMessage(voices[3])
         }
         // メッセージを削除
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
