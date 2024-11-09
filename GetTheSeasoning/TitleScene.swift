@@ -52,7 +52,7 @@ class TitleScene: SKScene {
         addChild(title)
 
         createButton(
-            buttonName: "level1Button"
+              buttonName: "level1Button"
             , buttonLabel: "初級"
             , buttonSize: CGSize(width: 250, height: 90)
             , buttonPosition: CGPoint(x: frame.midX, y: frame.midY + 20)
@@ -70,7 +70,7 @@ class TitleScene: SKScene {
         )
         
         createButton(
-            buttonName: "level3Button"
+              buttonName: "level3Button"
             , buttonLabel: "上級"
             , buttonSize: CGSize(width: 250, height: 90)
             , buttonPosition: CGPoint(x: frame.midX, y: frame.midY - 200)
@@ -157,24 +157,36 @@ class TitleScene: SKScene {
             // ゲーム画面に遷移
             let nodesAtPoint = nodes(at: location)
             for node in nodesAtPoint {
-                if node.name == "level1Button" {
+                if node.name == "level1Button", let buttonNode = node as? SKShapeNode {
+                    buttonNode.fillColor = SKColor.lightGray
                     playEffectSound(name: "リリンちゃん_ざあこざあこ", extension_name: "wav")
-                    let gameScene = GameScene(size: self.size, level: 1)
-                    let transition = SKTransition.fade(withDuration: 1.0)
-                    self.view?.presentScene(gameScene, transition: transition)
-                } else if node.name == "level2Button" {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                        let gameScene = GameScene(size: self.size, level: 1)
+                        let transition = SKTransition.fade(withDuration: 1.0)
+                        self.view?.presentScene(gameScene, transition: transition)
+                    }
+                } else if node.name == "level2Button", let buttonNode = node as? SKShapeNode {
+                    buttonNode.fillColor = SKColor.lightGray
                     playEffectSound(name: "リリンちゃん_があんばれっ", extension_name: "wav")
-                    let gameScene = GameScene(size: self.size, level: 2)
-                    let transition = SKTransition.fade(withDuration: 1.0)
-                    self.view?.presentScene(gameScene, transition: transition)
-                } else if node.name == "level3Button" {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                        let gameScene = GameScene(size: self.size, level: 2)
+                        let transition = SKTransition.fade(withDuration: 1.0)
+                        self.view?.presentScene(gameScene, transition: transition)
+                    }
+                } else if node.name == "level3Button", let buttonNode = node as? SKShapeNode {
+                    buttonNode.fillColor = SKColor.lightGray
                     playEffectSound(name: "リリンちゃん_やれるのお？", extension_name: "wav")
-                    let gameScene = GameScene(size: self.size, level: 3)
-                    let transition = SKTransition.fade(withDuration: 1.0)
-                    self.view?.presentScene(gameScene, transition: transition)
-                } else if node.name == "howToPlayButton" {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                        let gameScene = GameScene(size: self.size, level: 3)
+                        let transition = SKTransition.fade(withDuration: 1.0)
+                        self.view?.presentScene(gameScene, transition: transition)
+                    }
+                } else if node.name == "howToPlayButton", let buttonNode = node as? SKShapeNode {
+                    buttonNode.fillColor = SKColor.lightGray
                     playEffectSound(name: "リリンちゃん_ちゃんと見なさいよ", extension_name: "wav")
-                    showHowToPlayDialog()
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                        self.showHowToPlayDialog()
+                    }
                 }
             }
         }
@@ -183,9 +195,27 @@ class TitleScene: SKScene {
         if let dialog = howToPlayDialog, dialog.contains(location) {
             let nodesAtPointSub = nodes(at: location)
             for node in nodesAtPointSub {
-                if node.name == "returnButton" {
-                    closeHowToPlayDialog()
+                if node.name == "returnButton", let buttonNode = node as? SKShapeNode {
+                    buttonNode.fillColor = SKColor.lightGray
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        self.closeHowToPlayDialog()
+                    }
                     break
+                }
+            }
+        }
+    }
+    
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        guard let touch = touches.first else { return }
+        let location = touch.location(in: self)
+        
+        // タップ時の色を戻す
+        let nodesAtPoint = nodes(at: location)
+        for node in nodesAtPoint {
+            if node.name == "howToPlayButton", let buttonNode = node as? SKShapeNode {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    buttonNode.fillColor = SKColor.white
                 }
             }
         }
@@ -208,19 +238,19 @@ class TitleScene: SKScene {
         howToPlayDialogObject.addChild(howToPlayObject)
         
         let buttonSize = CGSize(width: 160, height: 70)
-        let buttonBg = SKShapeNode(rectOf: buttonSize, cornerRadius: 10)
-        buttonBg.fillColor = SKColor.white
-        buttonBg.strokeColor = SKColor.black
-        buttonBg.lineWidth = 1
-        buttonBg.zPosition = 101
-        buttonBg.position = CGPoint(x: 0, y: -440)
-        howToPlayDialogObject.addChild(buttonBg)
+        let returnbuttonBg = SKShapeNode(rectOf: buttonSize, cornerRadius: 10)
+        returnbuttonBg.fillColor = SKColor.white
+        returnbuttonBg.strokeColor = SKColor.black
+        returnbuttonBg.lineWidth = 1
+        returnbuttonBg.zPosition = 101
+        returnbuttonBg.position = CGPoint(x: 0, y: -440)
+        returnbuttonBg.name = "returnButton"
+        howToPlayDialogObject.addChild(returnbuttonBg)
         let returnButton = SKLabelNode(text: "戻る")
         returnButton.position = CGPoint(x: 0, y: -460)
         returnButton.zPosition = 101
         returnButton.fontColor = SKColor.black
         returnButton.fontSize = 50
-        returnButton.name = "returnButton"
         howToPlayDialogObject.addChild(returnButton)
         
         addChild(howToPlayDialogObject)

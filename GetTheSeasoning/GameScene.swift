@@ -431,13 +431,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         rankingButtonBg.lineWidth = 1
         rankingButtonBg.zPosition = 101
         rankingButtonBg.position = CGPoint(x: 0, y: -110)
+        rankingButtonBg.name = "rankingButton"
         resultDialogObject.addChild(rankingButtonBg)
         let rankingButton = SKLabelNode(text: "ランキングを見る")
         rankingButton.position = CGPoint(x: 0, y: -130)
         rankingButton.zPosition = 101
         rankingButton.fontColor = SKColor.black
         rankingButton.fontSize = 50
-        rankingButton.name = "rankingButton"
         resultDialogObject.addChild(rankingButton)
         
         let buttonSize = CGSize(width: 160, height: 70)
@@ -447,13 +447,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         closeButtonBg.lineWidth = 1
         closeButtonBg.zPosition = 101
         closeButtonBg.position = CGPoint(x: 0, y: -220)
+        closeButtonBg.name = "closeButton"
         resultDialogObject.addChild(closeButtonBg)
         let closeButton = SKLabelNode(text: "閉じる")
         closeButton.position = CGPoint(x: 0, y: -240)
         closeButton.zPosition = 101
         closeButton.fontColor = SKColor.black
         closeButton.fontSize = 50
-        closeButton.name = "closeButton"
         resultDialogObject.addChild(closeButton)
         
         addChild(resultDialogObject)
@@ -524,11 +524,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
             swipeStartPosition = touch.location(in: self)
             // 戻るボタン
             if returnButton.contains(location) {
-                returnTitle()
+                returnButton.fillColor = SKColor.lightGray
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                    self.returnTitle()
+                }
             }
             // リセットボタン
             if resetButton.contains(location) {
-                resetGame() // リセット処理を呼び出す
+                resetButton.fillColor = SKColor.lightGray
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                    self.resetGame()
+                }
             }
         }
         
@@ -536,14 +542,41 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         if let dialog = resultDialog, dialog.contains(location) {
             let nodesAtPoint = nodes(at: location)
             for node in nodesAtPoint {
-                if node.name == "rankingButton" {
+                if node.name == "rankingButton", let buttonNode = node as? SKShapeNode {
+                    buttonNode.fillColor = SKColor.lightGray
                     showLeaderboard()
                     break
                 }
-                if node.name == "closeButton" {
-                    closeResultDialog()
+                if node.name == "closeButton", let buttonNode = node as? SKShapeNode {
+                    buttonNode.fillColor = SKColor.lightGray
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                        self.closeResultDialog()
+                    }
                     break
                 }
+            }
+        }
+    }
+    
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        guard let touch = touches.first else { return }
+        let location = touch.location(in: self)
+        
+        // タップ時の色を戻す
+        if resetButton.contains(location) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                self.resetButton.fillColor = SKColor.white
+            }
+        }
+        
+        // タップ時の色を戻す
+        let nodesAtPoint = nodes(at: location)
+        for node in nodesAtPoint {
+            if node.name == "rankingButton", let buttonNode = node as? SKShapeNode {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    buttonNode.fillColor = SKColor.white
+                }
+                break
             }
         }
     }
@@ -554,7 +587,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         self.view?.presentScene(titleScene, transition: transition)
     }
     
-    // TODO: リファクタリング
+    // リセット
     func resetGame() {
         playCount = 0   // プレイ回数
         currentMessageLabel?.removeFromParent()
@@ -568,6 +601,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         totalTime = 0
         arm.position = CGPoint(x: frame.midX, y: -400)
         resetArmPosition()
+        isArmMoveRestriction = true    // 腕の上部移動を制限
         // 醤油の初期化
         if let soyNode = self.childNode(withName: "soysauce") {
             isIndicatingFlag = false;
