@@ -146,7 +146,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         _ = createObject(textureName: "father", size: CGSize(width: 400, height: 400), position: CGPoint(x: frame.midX - 150, y: frame.midY - 500), zPosition: 0)
         
         // 女性
-//        _ = createObject(textureName: "mother", size: CGSize(width: 400, height: 400), position: CGPoint(x: frame.midX + 150, y: frame.midY - 500), zPosition: 0)
         _ = createObject(textureName: "female", size: CGSize(width: 300, height: 300), position: CGPoint(x: frame.midX + 150, y: frame.midY - 550), zPosition: 0)
         
         // タイム計測
@@ -205,6 +204,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         var firstRange: ArraySlice<Int>
         var secondRange: ArraySlice<Int>
         var indexs: [Int] = [0]
+
         if level == 1 {
             indexs = [5,6]
         } else if level == 2 {
@@ -216,6 +216,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
             secondRange = Array(4...7).shuffled().prefix(5 - firstRange.count)
             indexs = Array(firstRange + secondRange).shuffled()
         }
+
         for (index, cookingName) in cookingNames.enumerated() {
             if indexs.contains(index) {
                 let position = positions[index]
@@ -396,6 +397,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
             self.startTimer()
             isArmMoveRestriction = false
             isIndicatingFlag = true
+
             if playCount < oneGamePlayCount {
                 playCount += 1
             } else {
@@ -669,7 +671,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         let voice_list = [
              "mesugaki": ["はやすぎでしょ", "やるね", "おそいよ", "ありがとう"]
             ,"father": ["はやいね", "やるね", "おそいな", "ありがとう"]
-            ,"mother": ["はやはやいでしょ", "やるね", "おそいな", "ありがとう"]
         ]
         var voices: [String] = []
         
