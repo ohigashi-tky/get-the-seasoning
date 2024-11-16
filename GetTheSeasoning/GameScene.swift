@@ -73,6 +73,61 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         , 3: "上級"
     ]
     
+    let cookingNames: [String] = [
+        "pasuta_meat", "medamayaki", "sanma", "korokke",
+        "syougayaki", "rice", "tonnjiru", "udon"
+    ]
+    
+    // 料理のランダム生成用の配列（毎回生成させない）
+    let indexs1: [Int] = [5, 6]
+    
+    let indexsList2: [[Int]] = [
+        [0, 1, 5, 6],
+        [1, 3, 4, 5],
+        [0, 2, 6, 7],
+        [2, 3, 5, 6],
+        [1, 5, 6, 7],
+        [0, 1, 4, 6],
+        [1, 2, 3, 4],
+        [2, 3, 5, 7],
+        [0, 1, 3, 6],
+        [1, 3, 5, 6]
+    ]
+    
+    let indexsList3: [[Int]] = [
+        [0, 1, 5, 6, 7],
+        [1, 3, 4, 5, 6],
+        [0, 2, 3, 4, 7],
+        [2, 3, 5, 6, 7],
+        [1, 2, 3, 5, 6],
+        [0, 1, 3, 6, 7],
+        [1, 2, 3, 4, 6],
+        [2, 3, 4, 5, 7],
+        [0, 1, 3, 5, 6],
+        [1, 3, 5, 6, 7]
+    ]
+    
+    let resRankList = [
+        1: "チーター"
+        , 1.5: "しょうゆ神"
+        , 2: "しょうゆ王"
+        , 2.5: "しょうゆマスター"
+        , 3: "しょうゆ達人"
+        , 3.5: "しょうゆソムリエ"
+        , 4: "しょうゆ検定2段"
+        , 4.5: "しょうゆ検定初段"
+        , 5: "しょうゆ検定1級"
+        , 5.5: "しょうゆ検定2級"
+        , 6.5: "しょうゆ検定3級"
+        , 7: "しょうゆ検定4級"
+        , 7.5: "しょうゆ検定5級"
+        , 8: "しょうゆ検定6級"
+        , 8.5: "しょうゆ検定7級"
+        , 9: "しょうゆ検定8級"
+        , 9.5: "しょうゆ検定9級"
+        , 10: "しょうゆ検定10級"
+    ]
+    
     struct PhysicsCategory {
         static let arm: UInt32 = 0x1 << 0 // 腕のカテゴリ
         static let soySauce: UInt32 = 0x1 << 1 // 醤油のカテゴリ
@@ -117,7 +172,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         } else if level == 2 {
             _ = createObject(textureName: "floor_gray", size: CGSize(width: 750, height: 1334), position: CGPoint(x: frame.midX, y: frame.midY), zPosition: -2)
         } else if level == 3 {
-            _ = createObject(textureName: "floor_mix", size: CGSize(width: 750, height: 1334), position: CGPoint(x: frame.midX, y: frame.midY), zPosition: -2)
+            _ = createObject(textureName: "floor_diamond", size: CGSize(width: 750, height: 1334), position: CGPoint(x: frame.midX, y: frame.midY), zPosition: -2)
         }
             
         // モニター
@@ -129,7 +184,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         } else if level == 2 {
             _ = createObject(textureName: "desk_black", size: CGSize(width: 550, height: 600), position: CGPoint(x: frame.midX, y: frame.midY - 50), zPosition: 0)
         } else if level == 3 {
-            _ = createObject(textureName: "desk_4mix2", size: CGSize(width: 550, height: 600), position: CGPoint(x: frame.midX, y: frame.midY - 50), zPosition: 0)
+            _ = createObject(textureName: "desk_metal", size: CGSize(width: 550, height: 600), position: CGPoint(x: frame.midX, y: frame.midY - 50), zPosition: 0)
         }
 
         // 料理の座標を設定
@@ -144,8 +199,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
             CGPoint(x: frame.minX + 595, y: frame.midY - 190)
         ]
         // 料理
-        if level > 0 {
-            createCookingObject()
+        createAllCookingObjectToHide()
+        createCookingObject()
+        if (level == 2) {
+            Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { _ in
+                self.createCookingObject()
+            }
+        } else if (level == 3) {
+            Timer.scheduledTimer(withTimeInterval: 1.5, repeats: true) { _ in
+                self.createCookingObject()
+            }
         }
         
         // 男性
@@ -199,37 +262,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         startMessageTimer()
     }
     
-    // 机の上の料理を生成（ランダム）
-    func createCookingObject() {
-        // 既存の料理を削除
-        removeExistingNode(name: "cooking")
+    func createAllCookingObjectToHide() {
+        let indexs: [Int] = [0,1,2,3,4,5,6,7]
         
-        let cookingNames: [String] = [
-            "pasuta_meat", "medamayaki", "sanma", "korokke",
-            "syougayaki", "rice", "tonnjiru", "udon"
-        ]
-
-        // 8つの中からランダムに表示 横一列の最大個数は3つ（醤油が取れるように）
-        var firstRange: ArraySlice<Int>
-        var secondRange: ArraySlice<Int>
-        var indexs: [Int] = [0]
-
-        if level == 1 {
-            indexs = [5,6]
-        } else if level == 2 {
-            firstRange = Array(0...3).shuffled().prefix(Int.random(in: 1...3))
-            secondRange = Array(4...7).shuffled().prefix(4 - firstRange.count)
-            indexs = Array(firstRange + secondRange).shuffled()
-        } else if level == 3 {
-            firstRange = Array(0...3).shuffled().prefix(Int.random(in: 2...3))
-            secondRange = Array(4...7).shuffled().prefix(5 - firstRange.count)
-            indexs = Array(firstRange + secondRange).shuffled()
-        }
-
-        for (index, cookingName) in cookingNames.enumerated() {
+        for (index, cookingName) in self.cookingNames.enumerated() {
             if indexs.contains(index) {
-                let position = positions[index]
-                _ = createSKPhysicsBody(
+                let position = self.positions[index]
+                _ = self.createSKPhysicsBody(
                     textureName: cookingName,
                     size: CGSize(width: 135, height: 110),
                     position: position,
@@ -238,14 +277,40 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
                 )
             }
         }
+        
+        self.children.filter { $0.name == "cooking" }.forEach { node in
+            node.isHidden = true
+        }
     }
     
-    // 指定した名称のノードを削除
-    func removeExistingNode(name: String) {
-        if name == "" { return }
-        for node in children {
-            if node.name == name {
-                node.removeFromParent()
+    // 机の上の料理を生成（ランダム）
+    func createCookingObject() {
+        DispatchQueue.global(qos: .userInitiated).async {
+            // 全て非表示
+            let cookingNodes = self.children.filter { $0.name == "cooking" }
+            cookingNodes.forEach { node in
+                node.isHidden = true
+                node.physicsBody?.categoryBitMask = 0
+                node.physicsBody?.contactTestBitMask = 0
+                node.physicsBody?.collisionBitMask = 0
+            }
+            
+            var indexs: [Int] = [0]
+            if self.level == 1 {
+                indexs = self.indexs1
+            } else if self.level == 2 {
+                indexs = self.indexsList2.randomElement()!
+            } else if self.level == 3 {
+                indexs = self.indexsList3.randomElement()!
+            }
+            
+            // 指定したインデックスで表示
+            for index in indexs {
+                let node = cookingNodes[index]
+                node.isHidden = false
+                node.physicsBody?.categoryBitMask = PhysicsCategory.cooking
+                node.physicsBody?.contactTestBitMask = PhysicsCategory.soySauce
+                node.physicsBody?.collisionBitMask = PhysicsCategory.soySauce
             }
         }
     }
@@ -386,6 +451,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         messageTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
             if self?.isPaused == true || self?.isIndicatingFlag == true { return }
             guard let self = self else { return }
+
             talker = Int.random(in: 0...1)  // 指示を出す人
             // メッセージの吹き出し
             self.messageImage?.removeFromParent()
@@ -419,30 +485,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
     }
     
     func getRank() -> String? {
-        let resRankList = [
-            1: "チーター"
-            , 1.5: "しょうゆ神"
-            , 2: "しょうゆ王"
-            , 2.5: "しょうゆマスター"
-            , 3: "しょうゆ達人"
-            , 3.5: "しょうゆソムリエ"
-            , 4: "しょうゆ検定2段"
-            , 4.5: "しょうゆ検定初段"
-            , 5: "しょうゆ検定1級"
-            , 5.5: "しょうゆ検定2級"
-            , 6.5: "しょうゆ検定3級"
-            , 7: "しょうゆ検定4級"
-            , 7.5: "しょうゆ検定5級"
-            , 8: "しょうゆ検定6級"
-            , 8.5: "しょうゆ検定7級"
-            , 9: "しょうゆ検定8級"
-            , 9.5: "しょうゆ検定9級"
-            , 10: "しょうゆ検定10級"
-        ]
-        
         // 小数第1位までを扱うために10倍してから切り上げ、元に戻す
         let roundedKey = Double(ceil(totalTime * 2) / 2)
-        print(totalTime, roundedKey)
         return (levelLabel[level] ?? "") + (resRankList[roundedKey] ?? "大豆")
     }
     

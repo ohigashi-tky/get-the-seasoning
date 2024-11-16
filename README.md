@@ -10,7 +10,7 @@
 Swift
 
 ## ボイス
-[COEIROINK:リリンちゃん AI声優-銀芽 AI声優-金苗](https://coeiroink.com/)
+[COEIROINK:リリンちゃん AI声優-銀芽](https://coeiroink.com/)
 
 ## 画面
 ![タイトル画面](title_image.png)

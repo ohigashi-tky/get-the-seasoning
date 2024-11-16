@@ -89,10 +89,10 @@ class TitleScene: SKScene {
         
         // クレジット
         createLabel(
-            text: "COEIROINK:リリンちゃん、AI声優-銀芽、AI声優-金苗"
+            text: "COEIROINK:リリンちゃん、AI声優-銀芽"
             , fontSize: 20
             , fontColor: SKColor.white
-            , position: CGPoint(x: frame.midX - 50, y: frame.midY - 500)
+            , position: CGPoint(x: frame.midX - 80, y: frame.midY - 500)
             , zPosition: 1
         )
     }
@@ -145,7 +145,7 @@ class TitleScene: SKScene {
         titleLabel.fontName = "komorebi-gothic-P"
         titleLabel.fontSize = 60
         titleLabel.fontColor = SKColor.black
-        titleLabel.position = CGPoint(x: frame.midX, y: frame.midY + 300)
+        titleLabel.position = CGPoint(x: frame.midX, y: frame.midY + 250)
         titleLabel.zPosition = 1
         addChild(titleLabel)
     }
