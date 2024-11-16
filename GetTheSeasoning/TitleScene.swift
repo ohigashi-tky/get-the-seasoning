@@ -92,7 +92,7 @@ class TitleScene: SKScene {
             text: "COEIROINK:リリンちゃん、AI声優-銀芽、AI声優-金苗"
             , fontSize: 20
             , fontColor: SKColor.white
-            , position: CGPoint(x: frame.midX - 70, y: frame.midY - 500)
+            , position: CGPoint(x: frame.midX - 50, y: frame.midY - 500)
             , zPosition: 1
         )
     }
@@ -108,6 +108,7 @@ class TitleScene: SKScene {
         addChild(button)
         let buttonLabel = SKLabelNode(text: buttonLabel)
         buttonLabel.position = buttonLabelPosition
+        buttonLabel.fontName = "komorebi-gothic-P"
         buttonLabel.fontSize = fontSize
         buttonLabel.fontColor = SKColor.black
         buttonLabel.zPosition = 1
@@ -116,7 +117,7 @@ class TitleScene: SKScene {
     
     func createLabel(text: String, fontSize: CGFloat, fontColor: SKColor, position: CGPoint, zPosition: CGFloat) {
         let label = SKLabelNode(text: text)
-//        label.fontName = "HiraMinProN-W6"
+        label.fontName = "komorebi-gothic-P"
         label.fontSize  = fontSize
         label.fontColor = fontColor
         label.position  = position
@@ -141,7 +142,7 @@ class TitleScene: SKScene {
     }
     
     func setupTitleLabel() {
-        titleLabel.fontName = "HiraMinProN-W6"
+        titleLabel.fontName = "komorebi-gothic-P"
         titleLabel.fontSize = 60
         titleLabel.fontColor = SKColor.black
         titleLabel.position = CGPoint(x: frame.midX, y: frame.midY + 300)
@@ -230,6 +231,7 @@ class TitleScene: SKScene {
         let titleLabel = SKLabelNode(text: "遊び方")
         titleLabel.position = CGPoint(x: 0, y: 415)
         titleLabel.zPosition = 101
+        titleLabel.fontName = "komorebi-gothic-P"
         titleLabel.fontColor = SKColor.black
         titleLabel.fontSize = 50
         howToPlayDialogObject.addChild(titleLabel)
@@ -249,6 +251,7 @@ class TitleScene: SKScene {
         let returnButton = SKLabelNode(text: "戻る")
         returnButton.position = CGPoint(x: 0, y: -460)
         returnButton.zPosition = 101
+        returnButton.fontName = "komorebi-gothic-P"
         returnButton.fontColor = SKColor.black
         returnButton.fontSize = 50
         howToPlayDialogObject.addChild(returnButton)

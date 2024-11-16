@@ -67,6 +67,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
     // スワイプ開始位置
     var swipeStartPosition: CGPoint?
     
+    let levelLabel = [
+        1: "初級"
+        , 2: "中級"
+        , 3: "上級"
+    ]
+    
     struct PhysicsCategory {
         static let arm: UInt32 = 0x1 << 0 // 腕のカテゴリ
         static let soySauce: UInt32 = 0x1 << 1 // 醤油のカテゴリ
@@ -151,6 +157,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         // タイム計測
         timerLabel = SKLabelNode(text: "タイム: 0秒")
         timerLabel.position = CGPoint(x: frame.midX, y: frame.maxY - 180)
+        timerLabel.fontName = "komorebi-gothic-P"
         timerLabel.fontSize = 40
         timerLabel.fontColor = SKColor.white
         addChild(timerLabel)
@@ -158,6 +165,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         // 最高タイム
         bestTimeLabel = SKLabelNode(text: "最高タイム:")
         bestTimeLabel.position = CGPoint(x: frame.midX, y: frame.maxY - 260)
+        bestTimeLabel.fontName = "komorebi-gothic-P"
         bestTimeLabel.fontSize = 40
         bestTimeLabel.fontColor = SKColor.yellow
         addChild(bestTimeLabel)
@@ -165,6 +173,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         // 合計タイム(1ゲーム)
         totalTimeLabel = SKLabelNode(text: "合計タイム:")
         totalTimeLabel.position = CGPoint(x: frame.midX, y: frame.maxY - 340)
+        totalTimeLabel.fontName = "komorebi-gothic-P"
         totalTimeLabel.fontSize = 40
         totalTimeLabel.fontColor = SKColor.green
         addChild(totalTimeLabel)
@@ -277,6 +286,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         addChild(returnButton)
         let returnButtonLabel = SKLabelNode(text: "戻る")
         returnButtonLabel.position = CGPoint(x: frame.midX - 200, y: frame.maxY - 85)
+        returnButtonLabel.fontName = "komorebi-gothic-P"
         returnButtonLabel.fontSize = 30
         returnButtonLabel.fontColor = SKColor.black
         returnButtonLabel.zPosition = 1
@@ -295,6 +305,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         addChild(resetButton)
         let resetButtonLabel = SKLabelNode(text: "リセット")
         resetButtonLabel.position = CGPoint(x: frame.midX + 200, y: frame.maxY - 85)
+        resetButtonLabel.fontName = "komorebi-gothic-P"
         resetButtonLabel.fontSize = 30
         resetButtonLabel.fontColor = SKColor.black
         resetButtonLabel.zPosition = 1
@@ -356,6 +367,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
             // 女性
             messageLabel.position = CGPoint(x: frame.midX + addPosition.messageLabelRight.x, y: frame.midY + addPosition.messageLabelRight.y)
         }
+        messageLabel.fontName = "komorebi-gothic-P"
         messageLabel.fontSize = 40
         messageLabel.fontColor = SKColor.black
         messageLabel.zPosition = 2
@@ -406,6 +418,34 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         }
     }
     
+    func getRank() -> String? {
+        let resRankList = [
+            1: "チーター"
+            , 1.5: "しょうゆ神"
+            , 2: "しょうゆ王"
+            , 2.5: "しょうゆマスター"
+            , 3: "しょうゆ達人"
+            , 3.5: "しょうゆソムリエ"
+            , 4: "しょうゆ検定2段"
+            , 4.5: "しょうゆ検定初段"
+            , 5: "しょうゆ検定1級"
+            , 5.5: "しょうゆ検定2級"
+            , 6.5: "しょうゆ検定3級"
+            , 7: "しょうゆ検定4級"
+            , 7.5: "しょうゆ検定5級"
+            , 8: "しょうゆ検定6級"
+            , 8.5: "しょうゆ検定7級"
+            , 9: "しょうゆ検定8級"
+            , 9.5: "しょうゆ検定9級"
+            , 10: "しょうゆ検定10級"
+        ]
+        
+        // 小数第1位までを扱うために10倍してから切り上げ、元に戻す
+        let roundedKey = Double(ceil(totalTime * 2) / 2)
+        print(totalTime, roundedKey)
+        return (levelLabel[level] ?? "") + (resRankList[roundedKey] ?? "大豆")
+    }
+    
     // 1ゲームごとの結果を表示
     func showResultDialog() {
         isPaused = true
@@ -415,17 +455,28 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         let titleLabel = SKLabelNode(text: "結果")
         titleLabel.position = CGPoint(x: 0, y: 200)
         titleLabel.zPosition = 101
+        titleLabel.fontName = "komorebi-gothic-P"
         titleLabel.fontColor = SKColor.black
         titleLabel.fontSize = 50
         resultDialogObject.addChild(titleLabel)
         
         let timeLabel = SKLabelNode(text: String(format: "合計タイム: %.2f秒", totalTime))
-        timeLabel.position = CGPoint(x: 0, y: 0)
+        timeLabel.position = CGPoint(x: 0, y: 100)
         timeLabel.zPosition = 101
+        timeLabel.fontName = "komorebi-gothic-P"
         timeLabel.fontColor = SKColor.black
         timeLabel.fontSize = 50
         resultDialogObject.addChild(timeLabel)
 
+        let resRank: String = getRank() ?? ""
+        let rankLabel = SKLabelNode(text: resRank)
+        rankLabel.position = CGPoint(x: 0, y: 0)
+        rankLabel.zPosition = 101
+        rankLabel.fontName = "komorebi-gothic-P"
+        rankLabel.fontColor = SKColor.yellow
+        rankLabel.fontSize = 50
+        resultDialogObject.addChild(rankLabel)
+        
         let rankingbuttonSize = CGSize(width: 400, height: 70)
         rankingButtonBg = SKShapeNode(rectOf: rankingbuttonSize, cornerRadius: 10)
         rankingButtonBg.fillColor = SKColor.white
@@ -438,6 +489,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         let rankingButton = SKLabelNode(text: "ランキングを見る")
         rankingButton.position = CGPoint(x: 0, y: -130)
         rankingButton.zPosition = 101
+        rankingButton.fontName = "komorebi-gothic-P"
         rankingButton.fontColor = SKColor.black
         rankingButton.fontSize = 50
         resultDialogObject.addChild(rankingButton)
@@ -454,6 +506,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         let closeButton = SKLabelNode(text: "閉じる")
         closeButton.position = CGPoint(x: 0, y: -240)
         closeButton.zPosition = 101
+        closeButton.fontName = "komorebi-gothic-P"
         closeButton.fontColor = SKColor.black
         closeButton.fontSize = 50
         resultDialogObject.addChild(closeButton)
