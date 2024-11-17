@@ -402,8 +402,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         
         // 左右に移動させる
         if level >= 3 {
-            let randomDuration1 = Double.random(in: 0.5...1)
-            let randomDuration2 = Double.random(in: 0.5...1)
+            let randomDuration1 = Double.random(in: 0.9...1.2)
+            let randomDuration2 = Double.random(in: 0.9...1.2)
             print(randomDuration1, randomDuration2)
             
             let moveLeft = SKAction.moveBy(x: -500, y: 0, duration: randomDuration1)
@@ -417,12 +417,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
             let verticalSequence = SKAction.sequence([moveUp, moveDown])
             let repeatVertical = SKAction.repeatForever(verticalSequence)
             
-            // 回転
-            let rotate = SKAction.rotate(byAngle: CGFloat(Double.pi * 2), duration: 1)
-            let infiniteRotate = SKAction.repeatForever(rotate)
-            
             // 左右と上下のアクションを同時に実行
-            let combinedAction = SKAction.group([repeatHorizontal, repeatVertical, infiniteRotate])
+            let combinedAction = SKAction.group([repeatHorizontal, repeatVertical])
             soysauce.run(combinedAction, withKey: "moveSoysauce")
         }
         addChild(soysauce)
