@@ -383,7 +383,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         soysauce = SKSpriteNode(texture: soysauceTexture, size: CGSize(width: 150, height: 180))
         if level >= 3 {
             // 左右移動のために端に配置
-            soysauce.position = CGPoint(x: frame.midX + 200, y: frame.midY + 160)
+            soysauce.position = CGPoint(x: frame.midX + 250, y: frame.midY + 100)
         } else {
             // 真ん中に配置
             soysauce.position = CGPoint(x: frame.midX, y: frame.midY + 160)
@@ -402,22 +402,51 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         
         // 左右に移動させる
         if level >= 3 {
-            let moveLeft = SKAction.moveBy(x: -400, y: 0, duration: 1.0)
-            let moveRight = SKAction.moveBy(x: 400, y: 0, duration: 1.0)
+            let randomDuration1 = Double.random(in: 0.5...1)
+            let randomDuration2 = Double.random(in: 0.5...1)
+            print(randomDuration1, randomDuration2)
+            
+            let moveLeft = SKAction.moveBy(x: -500, y: 0, duration: randomDuration1)
+            let moveRight = SKAction.moveBy(x: 500, y: 0, duration: randomDuration2)
             let horizontalSequence = SKAction.sequence([moveLeft, moveRight])
             let repeatHorizontal = SKAction.repeatForever(horizontalSequence)
             
             // 上下に移動させるアクション
-            let moveUp = SKAction.moveBy(x: 0, y: 50, duration: 0.3)
-            let moveDown = SKAction.moveBy(x: 0, y: -50, duration: 0.3)
+            let moveUp = SKAction.moveBy(x: 0, y: 130, duration: 0.3)
+            let moveDown = SKAction.moveBy(x: 0, y: -130, duration: 0.3)
             let verticalSequence = SKAction.sequence([moveUp, moveDown])
             let repeatVertical = SKAction.repeatForever(verticalSequence)
             
+            // 回転
+            let rotate = SKAction.rotate(byAngle: CGFloat(Double.pi * 2), duration: 1)
+            let infiniteRotate = SKAction.repeatForever(rotate)
+            
             // 左右と上下のアクションを同時に実行
-            let combinedAction = SKAction.group([repeatHorizontal, repeatVertical])
+            let combinedAction = SKAction.group([repeatHorizontal, repeatVertical, infiniteRotate])
             soysauce.run(combinedAction, withKey: "moveSoysauce")
         }
         addChild(soysauce)
+    }
+    
+    func createDynamicHorizontalAction() -> SKAction {
+        return SKAction.repeatForever(
+            SKAction.sequence([
+                SKAction.run { // ランダムな左移動を生成
+                    let randomX = CGFloat.random(in: -500...(-300))
+                    let randomDuration = Double.random(in: 0.5...1.5)
+                    let moveLeft = SKAction.moveBy(x: randomX, y: 0, duration: randomDuration)
+                    self.soysauce.run(moveLeft, withKey: "horizontalMove")
+                },
+                SKAction.wait(forDuration: 0.1), // 少し間隔を空ける
+                SKAction.run { // ランダムな右移動を生成
+                    let randomX = CGFloat.random(in: 300...500)
+                    let randomDuration = Double.random(in: 0.5...1.5)
+                    let moveRight = SKAction.moveBy(x: randomX, y: 0, duration: randomDuration)
+                    self.soysauce.run(moveRight, withKey: "horizontalMove")
+                },
+                SKAction.wait(forDuration: 0.1) // 少し間隔を空ける
+            ])
+        )
     }
     
     func showMessage(_ message: String) {
