@@ -404,7 +404,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         if level >= 3 {
             let randomDuration1 = Double.random(in: 0.9...1.2)
             let randomDuration2 = Double.random(in: 0.9...1.2)
-            print(randomDuration1, randomDuration2)
             
             let moveLeft = SKAction.moveBy(x: -500, y: 0, duration: randomDuration1)
             let moveRight = SKAction.moveBy(x: 500, y: 0, duration: randomDuration2)
@@ -422,27 +421,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
             soysauce.run(combinedAction, withKey: "moveSoysauce")
         }
         addChild(soysauce)
-    }
-    
-    func createDynamicHorizontalAction() -> SKAction {
-        return SKAction.repeatForever(
-            SKAction.sequence([
-                SKAction.run { // ランダムな左移動を生成
-                    let randomX = CGFloat.random(in: -500...(-300))
-                    let randomDuration = Double.random(in: 0.5...1.5)
-                    let moveLeft = SKAction.moveBy(x: randomX, y: 0, duration: randomDuration)
-                    self.soysauce.run(moveLeft, withKey: "horizontalMove")
-                },
-                SKAction.wait(forDuration: 0.1), // 少し間隔を空ける
-                SKAction.run { // ランダムな右移動を生成
-                    let randomX = CGFloat.random(in: 300...500)
-                    let randomDuration = Double.random(in: 0.5...1.5)
-                    let moveRight = SKAction.moveBy(x: randomX, y: 0, duration: randomDuration)
-                    self.soysauce.run(moveRight, withKey: "horizontalMove")
-                },
-                SKAction.wait(forDuration: 0.1) // 少し間隔を空ける
-            ])
-        )
     }
     
     func showMessage(_ message: String) {
@@ -726,6 +704,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, GKGameCenterControllerDelega
         arm.position = CGPoint(x: frame.midX, y: -400)
         resetArmPosition()
         isArmMoveRestriction = true    // 腕の上部移動を制限
+        isHoldingSoy = false
         // 醤油の初期化
         if let soyNode = self.childNode(withName: "soysauce") {
             isIndicatingFlag = false;
