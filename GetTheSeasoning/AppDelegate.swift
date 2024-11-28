@@ -19,6 +19,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Google Mobile Ads SDKの初期化
         GADMobileAds.sharedInstance().start(completionHandler: nil)
         
+        GADMobileAds.sharedInstance().requestConfiguration.testDeviceIdentifiers = ["6094cc1ff8c63d7465d385894119e31a"]
+        
         return true
     }
 
